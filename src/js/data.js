@@ -167,18 +167,27 @@ var Data = (function () {
   function getSiteTotals(state) {
     var syd = getSiteYearData(state);
     var out = {};
+    
+    // Group all farmer records by site to get true unique farmer count active in selected years
+    var siteUniqueFarmerCounts = {};
+    _raw.farmer_records.forEach(function (f) {
+      var activeInSelected = f.years.some(function (y) { return state.years.has(y); });
+      if (activeInSelected) {
+        siteUniqueFarmerCounts[f.site] = (siteUniqueFarmerCounts[f.site] || 0) + 1;
+      }
+    });
+
     Object.keys(syd).forEach(function (sn) {
-      var t = {site: sn, farmers: 0, prod_kg: 0, purch_riel: 0, area_ha: 0, comp_sum: 0, comp_n: 0};
+      var t = {site: sn, farmers: siteUniqueFarmerCounts[sn] || 0, prod_kg: 0, purch_riel: 0, area_ha: 0, compliant_insp: 0, total_insp: 0};
       Object.values(syd[sn]).forEach(function (d) {
-        t.farmers   += d.unique_farmers || 0;
-        t.prod_kg   += d.prod_kg || 0;
-        t.purch_riel+= d.purch_riel || 0;
-        t.area_ha   += d.total_area_ha || 0;
-        t.comp_sum  += (d.compliance_rate || 0) * (d.unique_farmers || 0);
-        t.comp_n    += d.unique_farmers || 0;
+        t.prod_kg        += d.prod_kg || 0;
+        t.purch_riel     += d.purch_riel || 0;
+        t.area_ha        += d.total_area_ha || 0;
+        t.compliant_insp += d.compliant_count || 0;
+        t.total_insp     += d.inspection_count || 0;
       });
       t.avg_yield = t.area_ha ? Math.round(t.prod_kg / t.area_ha * 10) / 10 : 0;
-      t.compliance = t.comp_n ? Math.round(t.comp_sum / t.comp_n * 10) / 10 : 0;
+      t.compliance = t.total_insp ? Math.round((t.compliant_insp / t.total_insp * 100) * 10) / 10 : 0;
       out[sn] = t;
     });
     return out;

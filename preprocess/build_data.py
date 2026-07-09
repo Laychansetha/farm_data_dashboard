@@ -129,6 +129,8 @@ def main():
                        {r['data_year'] for r in purchases    if r.get('data_year')} |
                        {r['data_year'] for r in threshings   if r.get('data_year')})
 
+    latest_year = all_years[-1] if all_years else ''
+
     # ── 3. Yearly trend ───────────────────────────────────────────
     print("[3/8] Computing yearly trends…")
 
@@ -145,6 +147,7 @@ def main():
 
     yr_data = defaultdict(new_yr)
 
+    seen_yearly_farmer = set()
     for r in inspections:
         y = r.get('data_year', ''); uid = r.get('farmer_uid', '')
         if not y: continue
@@ -154,9 +157,12 @@ def main():
         a = safe_float(r.get('surface_area_ha'))
         if 0 < a < 500: d['area_ha'] += a
         fs = normalize_farmer_status(r.get('farmer_status', ''))
-        if fs == 'New': d['new'] += 1
-        elif fs == 'Existing': d['existing'] += 1
-        elif fs == 'Rejoin': d['rejoin'] += 1
+        key = (y, uid, fs)
+        if key not in seen_yearly_farmer:
+            seen_yearly_farmer.add(key)
+            if fs == 'New': d['new'] += 1
+            elif fs == 'Existing': d['existing'] += 1
+            elif fs == 'Rejoin': d['rejoin'] += 1
         d['cert'][normalize_cert(r.get('status_harvest', ''))] += 1
         d['land_sit'][(r.get('land_situation', '') or 'Unknown').strip()] += 1
         d['land_own'][(r.get('land_ownership', '')  or 'Unknown').strip()] += 1
@@ -222,6 +228,7 @@ def main():
 
     sy = defaultdict(lambda: defaultdict(new_sy))
 
+    seen_site_yearly_farmer = set()
     for r in inspections:
         y = r.get('data_year', ''); uid = r.get('farmer_uid', '')
         if not y: continue
@@ -232,9 +239,12 @@ def main():
         a = safe_float(r.get('surface_area_ha'))
         if 0 < a < 500: d['area_ha'] += a
         fs = normalize_farmer_status(r.get('farmer_status', ''))
-        if fs == 'New': d['new'] += 1
-        elif fs == 'Existing': d['existing'] += 1
-        elif fs == 'Rejoin': d['rejoin'] += 1
+        key = (sn, y, uid, fs)
+        if key not in seen_site_yearly_farmer:
+            seen_site_yearly_farmer.add(key)
+            if fs == 'New': d['new'] += 1
+            elif fs == 'Existing': d['existing'] += 1
+            elif fs == 'Rejoin': d['rejoin'] += 1
         d['cert'][normalize_cert(r.get('status_harvest', ''))] += 1
 
     for r in threshings:
@@ -261,6 +271,8 @@ def main():
                 'unique_farmers': fc,
                 'new': d['new'], 'existing': d['existing'], 'rejoin': d['rejoin'],
                 'compliance_rate': pct(d['compliant'], d['insp']),
+                'compliant_count': d['compliant'],
+                'inspection_count': d['insp'],
                 'total_area_ha': round(d['area_ha'], 1),
                 'prod_kg': round(d['prod_kg']),
                 'purch_kg': round(d['purch_kg']),
@@ -279,6 +291,7 @@ def main():
     vill = defaultdict(new_vill)
 
     for r in inspections:
+        if r.get('data_year') != latest_year: continue
         uid = r.get('farmer_uid', '')
         vid = farmer_village_id(uid)
         vn  = village_name(vid)
@@ -290,12 +303,14 @@ def main():
         if 0 < a < 500: d['area_ha'] += a
 
     for r in threshings:
+        if r.get('data_year') != latest_year: continue
         uid = r.get('farmer_uid', '')
         vid = farmer_village_id(uid)
         vn  = village_name(vid)
         vill[vn]['prod_kg'] += safe_float(r.get('actual_total_rice_production_kg'))
 
     for r in purchases:
+        if r.get('data_year') != latest_year: continue
         uid = r.get('farmer_uid', '')
         vid = r.get('village_id', '') or farmer_village_id(uid)
         vn  = village_name(vid)
@@ -494,6 +509,7 @@ def main():
         all_f = set(); tot_prod = 0.0; tot_riel = 0.0; tot_area = 0.0
         tot_insp = 0; tot_comp = 0; vills = set()
         for r in inspections:
+            if r.get('data_year') != latest_year: continue
             uid = r.get('farmer_uid', '')
             if farmer_site_id(uid) == sid:
                 all_f.add(uid); tot_insp += 1
@@ -502,9 +518,11 @@ def main():
                 if 0 < a < 500: tot_area += a
                 vills.add(farmer_village_id(uid))
         for r in threshings:
+            if r.get('data_year') != latest_year: continue
             if farmer_site_id(r.get('farmer_uid', '')) == sid:
                 tot_prod += safe_float(r.get('actual_total_rice_production_kg'))
         for r in purchases:
+            if r.get('data_year') != latest_year: continue
             rid = r.get('site_id', '')
             if rid == sid:
                 tot_riel += safe_float(r.get('total_payment_riel'))

@@ -279,7 +279,7 @@ var Charts = (function () {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        scales: {x: xAxis, y: Object.assign({}, yAxis('Farmer-Year Records'), {stacked: true, beginAtZero: true})},
+        scales: {x: xAxis, y: Object.assign({}, yAxis('Farmers'), {stacked: true, beginAtZero: true})},
         plugins: {legend: {position: 'top'}},
       },
     });
@@ -928,7 +928,7 @@ var Charts = (function () {
         responsive: true, maintainAspectRatio: false,
         scales: {
           x: Object.assign({}, xAxis, {grid: {display: false}}),
-          y:  yAxis('Total Farmer-Year Count', false),
+          y:  yAxis('Farmers', false),
           y2: Object.assign({}, yAxis('Compliance (%)', true), {min: 0, max: 100}),
         },
         plugins: {legend: {position: 'top'}},
