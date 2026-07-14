@@ -1,0 +1,10 @@
+{
+  "name": "farm-data-dashboard",
+  "version": "1.0.0",
+  "description": "Interactive client-side operations dashboard for the Ibis Rice Program.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "preprocess": "python preprocess/build_data.py"
+  }
+}
