@@ -10,30 +10,31 @@ This repository contains the interactive client-side operations dashboard for th
 farm_data_dashboard/
 ├── .git/                      # Git repository files
 ├── .gitignore                 # Specifies intentionally untracked files to ignore
-├── README.md                  # Developer documentation (this file)
+├── package.json               # Project scripts and configuration [NEW]
+├── README.md                  # Developer documentation (this file) [UPDATED]
 ├── index.html                 # Main dashboard HTML shell (entry point)
 ├── data/
 │   └── dashboard_data.js      # Compiled JSON database wrapped in a window object
 ├── data_sources/              # Source CSV databases (dimensions and facts)
-│   ├── dim_crop_variety.csv
-│   ├── dim_farmer.csv
-│   ├── dim_irpg.csv
-│   ├── dim_site.csv
-│   ├── dim_village.csv
-│   ├── fact_afl_inspection.csv
-│   ├── fact_ppr_purchase.csv
-│   ├── fact_ppr_spec_record.csv
-│   └── fact_thr_threshing.csv
+│   ├── dim_crop_variety.csv   # Mappings of crop varieties
+│   ├── dim_farmer.csv         # Detailed farmer registry profiles
+│   ├── dim_irpg.csv           # Local farmer producer group IDs
+│   ├── dim_site.csv           # Program field site definitions
+│   ├── dim_village.csv        # Village names and associated field sites
+│   ├── fact_afl_inspection.csv # Organic compliance, land situation, and plot sizes
+│   ├── fact_ppr_purchase.csv  # Transaction records (gross/net sums and weights)
+│   ├── fact_ppr_spec_record.csv # Crop quality and moisture records
+│   └── fact_thr_threshing.csv # Paddy threshing yields and split allocations
 ├── preprocess/
 │   └── build_data.py          # Python preprocessor script
 └── src/
     ├── css/
-    │   └── dashboard.css      # Core styles (glassmorphism UI, custom scrollbars, layout)
+    │   └── dashboard.css      # Core styles (glassmorphism UI, grid, responsiveness)
     ├── js/
     │   ├── data.js            # Frontend data filtering, aggregation, and formatting layer
-    │   ├── charts.js          # Chart.js initialization and configuration layer
-    │   ├── views.js           # Dynamic view loaders, KPI cards, and sub-tab components
-    │   └── app.js             # Main controller, router, Map handler, and records pagination
+    │   ├── charts.js          # Chart.js configuration and drawing layer
+    │   ├── views.js           # Dynamic view builders and tab rendering
+    │   └── app.js             # Navigation router, Leaflet map handler, and controller
     └── lib/                   # Third-party local dependencies
         ├── chart.umd.min.js   # Chart.js library (local)
         ├── leaflet.js         # Leaflet Map library (local)
@@ -46,146 +47,161 @@ farm_data_dashboard/
 
 1. **Prerequisites**:
    - A modern web browser.
-   - Python 3.7+ (only required if recompiling or updating raw data). No external pip packages are needed (only standard libraries like `csv`, `json`, and `os` are used).
+   - Python 3.7+ (only required if updating or regenerating data).
 
-2. **Running Locally**:
-   - Because Leaflet and AJAX components can trigger browser security sandboxing when loading local files directly via `file://`, start a local HTTP development server in the repository directory:
+2. **Starting the Development Server**:
+   Because Leaflet and Ajax components require local asset serving and can be blocked by browser security sandboxes when using `file://` protocols, start the development server using the NPM script:
+   ```bash
+   npm run dev
+   ```
+   *Note: This command runs Python's built-in HTTP server (`python -m http.server 8000`) and serves the static files at `http://localhost:8000` with zero dependencies.*
 
-     ```bash
-     python -m http.server 8000
-     ```
-
-   - Open your browser and go to:
-     👉 `http://localhost:8000`
+3. **Running the Preprocessor**:
+   To ingest new CSV data from `data_sources/` and compile it into `data/dashboard_data.js`, run:
+   ```bash
+   npm run preprocess
+   ```
 
 ---
 
 ## 💾 Data Sources
 
-The dashboard preprocessor ingests two classes of raw CSV databases from the `data_sources/` folder:
+The preprocessor ingests two groups of CSV files located in `data_sources/`:
 
 ### Dimension Tables
-
-- `dim_site.csv`: Contains the program site details (e.g., Mondolkiri, Preah Vihear, Prey Lang, Ratanakiri, Siem Pang).
-- `dim_village.csv`: Relates village IDs to village names.
-- `dim_irpg.csv`: Defines local farmer producer groups.
-- `dim_crop_variety.csv`: Mapping of rice varieties.
-- `dim_farmer.csv`: Registrations details for each unique farmer (e.g., gender, site, village, registration date).
+- `dim_site.csv`: List of project field sites (Mondolkiri, Preah Vihear, Prey Lang, Ratanakiri, Siem Pang).
+- `dim_village.csv`: Maps village IDs to village names, field sites, and local farmer producer groups.
+- `dim_irpg.csv`: Defines farmer producer groups.
+- `dim_crop_variety.csv`: Classification of crop varieties and seeds.
+- `dim_farmer.csv`: Farmer registry including names, registration date (`first_year_seen`), village, and gender.
 
 ### Fact Tables
-
-- `fact_afl_inspection.csv`: Field inspection logs containing certification status (`status_harvest`), compliance (`compliant`), land situation, ownership, and surface area (`surface_area_ha`).
-- `fact_thr_threshing.csv`: Threshing logs containing production records (`actual_total_rice_production_kg`) and threshing methods.
-- `fact_ppr_purchase.csv`: Transaction logs containing quantities bought (`quantity_kg`), grade (`grade`), and payment sums (`total_payment_riel`).
-- `fact_ppr_spec_record.csv`: Quality measurements containing moisture level, color purity, good grain vs. broken grain ratios, and impurities.
-
----
-
-## ⚙️ Data Preprocessor
-
-The preprocessor ([preprocess/build_data.py](file:///c:/Users/DoF_1/Documents/Agv_dev_dashboard/preprocess/build_data.py)) parses and aggregates all raw CSV files into a single optimized JavaScript file ([data/dashboard_data.js](file:///c:/Users/DoF_1/Documents/Agv_dev_dashboard/data/dashboard_data.js)). This output defines a global database object `window.DASHBOARD_DATA` containing pre-aggregated summaries, cohort retentions, and quality stats.
-
-### Running the Preprocessor
-
-Run the script from the root directory whenever raw CSV files in `data_sources/` are modified:
-
-```bash
-python preprocess/build_data.py
-```
+- `fact_afl_inspection.csv`: Field inspection records tracking compliance status (`compliant`), harvest certification status, land situation, and surface area (`surface_area_ha`).
+- `fact_thr_threshing.csv`: Threshing reports tracking total production (`actual_total_rice_production_kg`) and split allocations (sold, consumed, seeds kept).
+- `fact_ppr_purchase.csv`: Transaction logs containing transaction date, quantity (`quantity_kg`), grade, unit price, gross amount (`total_amount_riel`), and net payout (`total_payment_riel` after seed deductions).
+- `fact_ppr_spec_record.csv`: Quality measurements recording moisture levels, purity, impurity ratios, color, and grade classification.
 
 ---
 
 ## 📐 Calculations, Formulas, and Assumptions
 
-### 1. Weight Units
+Below is the documentation for all core calculations implemented in the dashboard:
 
-- Weights are calculated in **Kilograms (Kg)** internally.
-- Values under `1,000 Kg` are displayed with `Kg` suffix.
-- Values `>= 1,000 Kg` are automatically converted to **Metric Tons (MT)** for cleaner displays on cards and charts.
+### 1. Active Farmers
+- **Data Source**: `fact_afl_inspection.csv`
+- **Formula**:
+  $$\text{Active Farmers} = \text{Count of unique } (\text{farmer\_uid}) \text{ in inspections for selected period}$$
+- **Calculation Method**: Aggregated in `build_data.py` to prevent double-counting of farmers with multiple plots. Filtered and resolved dynamically on the frontend.
+- **Assumptions**: A farmer is active in a given year if they underwent a program inspection during that year.
+- **Output Format**: Integer (e.g. `2,449` active farmers).
+
+### 2. Total Production Volume
+- **Data Source**: `fact_thr_threshing.csv`
+- **Formula**:
+  $$\text{Production (Kg)} = \sum \text{actual\_total\_rice\_production\_kg}$$
+- **Calculation Method**: Summed across matching records in the preprocessor and aggregated on the frontend.
+- **Assumptions**: Threshing records are accurate. Empty/invalid inputs default to `0.0`.
+- **Output Format**: Kilograms (`Kg`) for volumes $< 1,000$ Kg; Metric Tons (`MT`) for volumes $\ge 1,000$ Kg:
   $$\text{Weight in MT} = \frac{\text{Weight in Kg}}{1000}$$
-- **Average Yield**:
-  $$\text{Yield (Kg/Ha)} = \frac{\text{Total Production (Kg)}}{\text{Farmland Area (Ha)}}$$
 
-### 2. Currency Conversions
+### 3. Program Revenue (Net Farmer Income)
+- **Data Source**: `fact_ppr_purchase.csv`
+- **Formula**:
+  $$\text{Revenue (Riel)} = \sum \text{total\_payment\_riel}$$
+- **Calculation Method**: Sum of net payments received by farmers (after deducting seed or transportation costs).
+- **Assumptions**: Large sums are converted to USD at a fixed exchange rate of **`1 USD = 4,000 KHR`**:
+  $$\text{USD (\$)} = \frac{\text{Value in KHR}}{4000}$$
+- **Output Format**: USD (`$`) for values $\ge 4000$ KHR. Values in the millions include the `M` suffix (e.g., `$5.51M`).
 
-- Transactions are recorded in **Cambodian Riel (KHR)**.
-- Exchange rate assumption: **`1 USD = 4,000 KHR`**.
-- Prices under `4,000 KHR` (such as unit prices per Kg of paddy) are formatted in **KHR** (e.g., `1,750 KHR`).
-- Large values (e.g., total revenues, income cards, and program totals) are converted and formatted in **US Dollars ($)**.
-  $$\text{USD ($)} = \frac{\text{Value in KHR}}{4000}$$
-- Values in the millions are represented with the `$M` suffix (e.g., `$5.51M`).
+### 4. Average Paddy Yield
+- **Data Source**: `fact_thr_threshing.csv` (Production) & `fact_afl_inspection.csv` (Area)
+- **Formula**:
+  $$\text{Yield (Kg/Ha)} = \frac{\text{Total Production (Kg)}}{\text{Total Cultivated Area (Ha)}}$$
+- **Calculation Method**: Divides the total production of the cohort by the sum of inspected farmland area.
+- **Assumptions**: Inspection areas and threshing volumes represent matching cohorts.
+- **Output Format**: Rounded to 1 decimal place followed by `" Kg/Ha"`.
 
-### 3. Active Farmer Status Breakdown
+### 5. Average Paddy Unit Price
+- **Data Source**: `fact_ppr_purchase.csv`
+- **Formula**:
+  $$\text{Average Price (KHR/Kg)} = \frac{\sum \text{total\_amount\_riel}}{\sum \text{quantity\_kg}}$$
+- **Calculation Method**: Sums gross purchase values (before deductions) and divides by the total weight bought. If `total_amount_riel` is empty, it falls back to `unit_price_riel * quantity_kg`.
+- **Assumptions**: Calculated using gross amounts to represent the actual market price of paddy before repayments.
+- **Output Format**: Integer followed by `" KHR/Kg"` (or USD if above 4,000 KHR).
 
-- The preprocessor counts each farmer only once per status per year (and site).
-- This is calculated by tracking unique combinations of `(data_year, farmer_uid, farmer_status)` in `fact_afl_inspection.csv` to avoid double-counting farmers who had multiple plots inspected in the same year.
-
-### 4. Site Comparison Calculations
-
-- **True Unique Farmers**: In the Site Comparison, the unique active farmers count is computed in [data.js](file:///c:/Users/DoF_1/Documents/Agv_dev_dashboard/src/js/data.js) by querying all records in `_raw.farmer_records` that match the site and were active in at least one of the selected years (`state.years`). This resolves double-counting across multi-year selections.
-- **Mathematically Sound Compliance**: The preprocessor outputs `compliant_count` and `inspection_count` in `site_year`. The frontend sums these raw counts for the selected years to calculate the true compliance rate:
+### 6. Program Compliance Rate
+- **Data Source**: `fact_afl_inspection.csv`
+- **Formula**:
   $$\text{Compliance Rate (\%)} = \left( \frac{\sum \text{Compliant Inspections}}{\sum \text{Total Inspections}} \right) \times 100$$
+- **Calculation Method**: Inspections where `compliant` equals `"Yes"` are summed and divided by the total inspection count. Aggregated using raw counts to prevent mathematical errors.
+- **Assumptions**: Compliance is binary ("Yes" / "No").
+- **Output Format**: Percentage with 1 decimal place (e.g., `77.3%`).
 
-### 5. Geography Map Views
+### 7. Farmland Area
+- **Data Source**: `fact_afl_inspection.csv`
+- **Formula**:
+  $$\text{Total Area (Ha)} = \sum \text{surface\_area\_ha}$$
+- **Calculation Method**: Summed in the preprocessor. Excludes extreme outlier records where area is $\le 0.0$ or $\ge 500.0$ Ha to safeguard against data entry errors.
+- **Assumptions**: Land area is measured in Hectares (Ha).
+- **Output Format**: Rounded to 1 decimal place followed by `" Ha"`.
 
-- The Leaflet map popups, site stats, and village lists displayed under the **Geography** tab represent only the **latest year (`2025`)** to highlight the current active participation in the project.
+### 8. Cohort Retention Rate
+- **Data Source**: `dim_farmer.csv` (Join Year) & `fact_afl_inspection.csv` (Inspection records)
+- **Formula**:
+  $$\text{Retention Rate (Cohort } C\text{, Year } Y\text{)} = \left( \frac{\text{Inspected Cohort Farmers in } Y}{\text{Total Cohort Size}} \right) \times 100$$
+- **Calculation Method**: Cohort sizes are grouped by registration year (`first_year_seen`). The percentage of active cohort members in each subsequent year is plotted.
+- **Output Format**: Percentage rounded to nearest integer (e.g. `78%`).
 
-### 6. Cohort Retention Analysis
+---
 
-- Farmers are grouped into registration cohorts based on the year they registered (`first_year`).
-- The retention rate for cohort $C$ in year $N$ (where $N = 1, 2, ...$) represents the percentage of those cohort farmers inspected in year $N$ of their registration.
+## 🗺️ Geographic Map Views
+
+The **Geography** tab map popups, site summaries, and village list filter reflect only the **latest year (`2025`)** to highlight the current active participation in the project.
 
 ---
 
 ## 📈 UI and Chart Configurations
 
-The dashboard uses **Chart.js v4 (UMD)** for all graphs and **Leaflet.js** for the map. They are configured in `src/js/charts.js`:
-
-1. **Farmer Growth (Stacked Bar)**: Renders the active farmer count by status (`New`, `Rejoin`, `Existing`) over time.
-2. **Production Trend (Line)**: Renders the total production in Metric Tons (`MT`).
-3. **Purchase Trend (Bar)**: Graphs program purchase totals in Millions of USD (`$M`).
-4. **Site Comparison (Grouped Bar/Line)**: Compares sites by unique farmer counts (left axis, `Farmers`) and compliance rates (right axis, `Compliance Rate %`).
-5. **Quality Trends (Line)**: Renders moisture levels, Good Grain %, Broken Grain %, and impurity ratios.
-6. **Interactive Leaflet Map**: Generates interactive coordinate circles for sites. Clicking a circle populates local statistics and filters the sidebar list of **Villages in this Site**.
-
----
-
-## 🧩 Customization & Extensibility
-
-### Adding a New Site Coordinate
-
-To add a new site on the map, edit `SITE_COORDS` in [preprocess/build_data.py](file:///c:/Users/DoF_1/Documents/Agv_dev_dashboard/preprocess/build_data.py):
-
-```python
-SITE_COORDS = {
-    '1': {'name': 'Mondolkiri',   'lat': 12.4535, 'lng': 107.1877},
-    ...
-    '6': {'name': 'New Site',      'lat': 13.1234, 'lng': 105.1234},
-}
-```
-
-Run `python preprocess/build_data.py` to regenerate the data.
-
-### Formatting Helper Functions
-
-Formatting changes (e.g., updating currencies or adding unit labels) should be modified in [src/js/data.js](file:///c:/Users/DoF_1/Documents/Agv_dev_dashboard/src/js/data.js):
-
-- `kgFmt(n)`: Dynamic weight formatter (Kg $\to$ MT).
-- `rielFmt(n)`: Dynamic money formatter (Riel $\to$ USD / KHR).
+The dashboard uses **Chart.js v4 (UMD)** and **Leaflet.js** configured in `src/js/charts.js`:
+- **Farmer Growth**: Stacked bar displaying active farmers by status (`New`, `Rejoin`, `Existing`).
+- **Production Trend**: Grouped bar showing production in MT with line chart overlay of yield (Kg/Ha).
+- **Purchase Trend**: Bar displaying purchase volume in MT with line overlay of revenue ($M).
+- **Quality Trends**: Multi-line chart showing moisture levels, impurities, and grain quality ratios.
+- **Site Comparison**: Grouped bar comparing active sites by farmer count and compliance.
+- **Interactive Map**: Renders coordinates and circles sized by farmer volume. Clicking a circle populates local statistics and filters the village lists.
 
 ---
 
-## 🚀 Deployment to GitHub Pages
+## 🚀 Deployment Instructions (GitHub Pages)
 
-1. Rename your repository to `farm_data_dashboard` in the GitHub Repository **Settings** tab.
-2. Go to repository **Settings** > **Pages** > **Build and deployment**.
-3. Under **Source**, select **Deploy from a branch**.
-4. Set the **Branch** to `main` and keep the directory as `/ (root)`.
-5. Click **Save**.
-6. The site will deploy in 1-2 minutes and be hosted at:
+1. Make sure your repository is pushed to GitHub.
+2. Navigate to your repository page on GitHub.
+3. Open **Settings** > **Pages** > **Build and deployment**.
+4. Set the source to **Deploy from a branch**.
+5. Select the **`main`** branch and keep the directory as `/ (root)`.
+6. Click **Save**. The page will deploy in 1-2 minutes and be available at:
    `https://<username>.github.io/farm_data_dashboard/`
-7. Update your local git remote URL:
 
-   ```bash
-   git remote set-url origin https://github.com/<username>/farm_data_dashboard.git
-   ```
+---
+
+## 🔄 Git Workflow
+
+- **`main`**: The stable branch reflecting the active production environment.
+- When updating data files:
+  1. Replace the CSV files in `data_sources/`.
+  2. Run the preprocessor command `npm run preprocess` to rebuild `data/dashboard_data.js`.
+  3. Validate the dashboard locally using `npm run dev`.
+  4. Commit both the updated CSVs and the newly generated `data/dashboard_data.js`.
+  5. Push to GitHub to trigger automatic deployment to GitHub Pages.
+
+---
+
+## 🔮 Future Improvements
+
+1. **Migrate to React and TypeScript**:
+   - Rewrite the components using functional components and hooks for better state management.
+   - Introduce TypeScript interfaces for the dashboard data models to catch bugs during development.
+2. **Incremental Loading**:
+   - For even larger datasets, load data chunk-by-chunk using API endpoints or split JSON cohorts instead of loading a single large `dashboard_data.js` file.
+3. **Database Integration**:
+   - Transition the Python preprocessor to run as a backend ETL pipeline feeding into a relational database (PostgreSQL) instead of using local CSV databases.

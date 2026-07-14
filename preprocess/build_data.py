@@ -151,7 +151,7 @@ def main():
             'land_own': defaultdict(int), 'irrigation': defaultdict(int),
             'prod_kg': 0.0, 'sell_kg': 0.0, 'consume_kg': 0.0, 'seed_kg': 0.0,
             'thr_machine': 0, 'thr_hand': 0, 'thr_unknown': 0,
-            'purch_kg': 0.0, 'purch_riel': 0.0, 'purch_n': 0,
+            'purch_kg': 0.0, 'purch_riel': 0.0, 'purch_amount_riel': 0.0, 'purch_n': 0,
         }
 
     yr_data = defaultdict(new_yr)
@@ -201,6 +201,10 @@ def main():
         d = yr_data[y]
         d['purch_kg']   += safe_float(r.get('quantity_kg'))
         d['purch_riel'] += safe_float(r.get('total_payment_riel'))
+        amt = safe_float(r.get('total_amount_riel'))
+        if amt <= 0:
+            amt = safe_float(r.get('unit_price_riel')) * safe_float(r.get('quantity_kg'))
+        d['purch_amount_riel'] += amt
         d['purch_n']    += 1
 
     yearly_trend = []
@@ -208,7 +212,7 @@ def main():
         d = yr_data[y]
         fc = len(d['farmers'])
         yield_ha = d['prod_kg'] / d['planted_area_ha'] if d['planted_area_ha'] else 0
-        avg_price = d['purch_riel'] / d['purch_kg'] if d['purch_kg'] else 0
+        avg_price = d['purch_amount_riel'] / d['purch_kg'] if d['purch_kg'] else 0
         yearly_trend.append({
             'year': y,
             'unique_farmers': fc,
@@ -227,6 +231,7 @@ def main():
             'thr_machine': d['thr_machine'], 'thr_hand': d['thr_hand'], 'thr_unknown': d['thr_unknown'],
             'purch_kg': round(d['purch_kg']),
             'purch_riel': round(d['purch_riel']),
+            'purch_amount_riel': round(d['purch_amount_riel']),
             'purch_n': d['purch_n'],
             'avg_price_riel_kg': round(avg_price),
             'cert': dict(d['cert']),
@@ -241,7 +246,7 @@ def main():
     def new_sy():
         return {'farmers': set(), 'insp': 0, 'compliant': 0, 'area_ha': 0.0,
                 'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
-                'prod_kg': 0.0, 'purch_kg': 0.0, 'purch_riel': 0.0,
+                'prod_kg': 0.0, 'purch_kg': 0.0, 'purch_riel': 0.0, 'purch_amount_riel': 0.0,
                 'new': 0, 'existing': 0, 'rejoin': 0,
                 'cert': defaultdict(int),
                 'land_sit': defaultdict(int),
@@ -290,6 +295,10 @@ def main():
         sn  = site_name(sid) if sid else 'Unknown'
         sy[sn][y]['purch_kg']   += safe_float(r.get('quantity_kg'))
         sy[sn][y]['purch_riel'] += safe_float(r.get('total_payment_riel'))
+        amt = safe_float(r.get('total_amount_riel'))
+        if amt <= 0:
+            amt = safe_float(r.get('unit_price_riel')) * safe_float(r.get('quantity_kg'))
+        sy[sn][y]['purch_amount_riel'] += amt
 
     site_year = {}
     for sn, ydict in sy.items():
@@ -310,6 +319,7 @@ def main():
                 'prod_kg': round(d['prod_kg']),
                 'purch_kg': round(d['purch_kg']),
                 'purch_riel': round(d['purch_riel']),
+                'purch_amount_riel': round(d['purch_amount_riel']),
                 'avg_yield_kg_ha': round(yield_ha, 1),
                 'cert': dict(d['cert']),
                 'land_sit': dict(d['land_sit']),
@@ -323,7 +333,7 @@ def main():
     def new_vill():
         return {'farmers': set(), 'site': '', 'prod_kg': 0.0,
                 'area_ha': 0.0, 'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
-                'purch_kg': 0.0, 'purch_riel': 0.0, 'years': set()}
+                'purch_kg': 0.0, 'purch_riel': 0.0, 'purch_amount_riel': 0.0, 'years': set()}
 
     vill = defaultdict(new_vill)
 
@@ -358,6 +368,10 @@ def main():
         vn  = village_name(vid)
         vill[vn]['purch_kg']   += safe_float(r.get('quantity_kg'))
         vill[vn]['purch_riel'] += safe_float(r.get('total_payment_riel'))
+        amt = safe_float(r.get('total_amount_riel'))
+        if amt <= 0:
+            amt = safe_float(r.get('unit_price_riel')) * safe_float(r.get('quantity_kg'))
+        vill[vn]['purch_amount_riel'] += amt
 
     village_stats = []
     for vn, d in vill.items():
@@ -372,6 +386,7 @@ def main():
             'avg_yield_kg_ha': round(yh, 1),
             'purch_kg': round(d['purch_kg']),
             'purch_riel': round(d['purch_riel']),
+            'purch_amount_riel': round(d['purch_amount_riel']),
             'years_active': sorted(d['years']),
         })
     village_stats.sort(key=lambda x: x['prod_kg'], reverse=True)
@@ -560,7 +575,7 @@ def main():
     site_summary = {}
     for sid, sc in SITE_COORDS.items():
         sn  = sc['name']
-        all_f = set(); tot_prod = 0.0; tot_riel = 0.0; tot_area = 0.0
+        all_f = set(); tot_prod = 0.0; tot_riel = 0.0; tot_amt = 0.0; tot_area = 0.0
         tot_planted = 0.0; tot_fallow = 0.0; tot_other = 0.0
         tot_insp = 0; tot_comp = 0; vills = set()
         for r in inspections:
@@ -586,6 +601,10 @@ def main():
             rid = r.get('site_id', '')
             if rid == sid:
                 tot_riel += safe_float(r.get('total_payment_riel'))
+                amt = safe_float(r.get('total_amount_riel'))
+                if amt <= 0:
+                    amt = safe_float(r.get('unit_price_riel')) * safe_float(r.get('quantity_kg'))
+                tot_amt += amt
         yield_ha = tot_prod / tot_planted if tot_planted else 0
         site_summary[sn] = {
             'site_id': sid, 'site_name': sn,
@@ -594,6 +613,7 @@ def main():
             'total_villages': len(vills),
             'prod_kg': round(tot_prod),
             'purch_riel': round(tot_riel),
+            'purch_amount_riel': round(tot_amt),
             'area_ha': round(tot_area, 1),
             'planted_area_ha': round(tot_planted, 1),
             'fallow_area_ha': round(tot_fallow, 1),
@@ -606,6 +626,12 @@ def main():
     all_f   = {r.get('farmer_uid', '') for r in inspections if r.get('farmer_uid')}
     all_p   = sum(safe_float(r.get('actual_total_rice_production_kg')) for r in threshings)
     all_r   = sum(safe_float(r.get('total_payment_riel')) for r in purchases)
+    def row_amt(r):
+        amt = safe_float(r.get('total_amount_riel'))
+        if amt <= 0:
+            amt = safe_float(r.get('unit_price_riel')) * safe_float(r.get('quantity_kg'))
+        return amt
+    all_amt = sum(row_amt(r) for r in purchases)
     all_q   = sum(safe_float(r.get('quantity_kg')) for r in purchases)
     all_planted = 0.0
     all_fallow = 0.0
@@ -622,6 +648,7 @@ def main():
         'total_farmers': len(all_f),
         'total_prod_kg': round(all_p),
         'total_purch_riel': round(all_r),
+        'total_purch_amount_riel': round(all_amt),
         'total_purch_kg': round(all_q),
         'compliance_rate': pct(all_c, all_i),
         'total_area_ha': round(all_a, 1),
@@ -629,7 +656,7 @@ def main():
         'total_fallow_area_ha': round(all_fallow, 1),
         'total_other_area_ha': round(all_other, 1),
         'avg_yield_kg_ha': round(all_p / all_planted, 1) if all_planted else 0,
-        'avg_price_riel_kg': round(all_r / all_q) if all_q else 0,
+        'avg_price_riel_kg': round(all_amt / all_q) if all_q else 0,
         'total_inspections': all_i,
         'total_purchases': len(purchases),
         'total_threshings': len(threshings),

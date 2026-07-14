@@ -75,7 +75,7 @@ var Data = (function () {
     var years = Array.from(state.years).sort();
     return years.map(function (y) {
       var total = {year: y, unique_farmers: 0, new: 0, existing: 0, rejoin: 0,
-                   prod_kg: 0, purch_kg: 0, purch_riel: 0, area_ha: 0, planted_area_ha: 0, fallow_area_ha: 0, other_area_ha: 0, compliance_sum: 0, compliance_n: 0,
+                   prod_kg: 0, purch_kg: 0, purch_riel: 0, purch_amount_riel: 0, area_ha: 0, planted_area_ha: 0, fallow_area_ha: 0, other_area_ha: 0, compliant_count: 0, inspection_count: 0,
                    cert: {}, land_sit: {}, land_own: {}, irrigation: {}};
       Object.keys(syd).forEach(function (sn) {
         var d = syd[sn][y];
@@ -87,12 +87,13 @@ var Data = (function () {
         total.prod_kg        += d.prod_kg || 0;
         total.purch_kg       += d.purch_kg || 0;
         total.purch_riel     += d.purch_riel || 0;
+        total.purch_amount_riel += (d.purch_amount_riel !== undefined ? d.purch_amount_riel : d.purch_riel) || 0;
         total.area_ha        += d.total_area_ha || 0;
         total.planted_area_ha += d.planted_area_ha || 0;
         total.fallow_area_ha  += d.fallow_area_ha || 0;
         total.other_area_ha   += d.other_area_ha || 0;
-        total.compliance_sum += (d.compliance_rate || 0) * (d.unique_farmers || 0);
-        total.compliance_n   += d.unique_farmers || 0;
+        total.compliant_count += d.compliant_count || 0;
+        total.inspection_count += d.inspection_count || 0;
 
         // Aggregate cert dict
         if (d.cert) {
@@ -119,9 +120,9 @@ var Data = (function () {
           });
         }
       });
-      total.compliance_rate = total.compliance_n ? Math.round(total.compliance_sum / total.compliance_n * 10) / 10 : 0;
+      total.compliance_rate = total.inspection_count ? Math.round((total.compliant_count / total.inspection_count * 100) * 10) / 10 : 0;
       total.avg_yield = total.planted_area_ha ? Math.round(total.prod_kg / total.planted_area_ha * 10) / 10 : 0;
-      total.avg_price = total.purch_kg ? Math.round(total.purch_riel / total.purch_kg) : 0;
+      total.avg_price = total.purch_kg ? Math.round(total.purch_amount_riel / total.purch_kg) : 0;
       return total;
     });
   }
@@ -157,7 +158,7 @@ var Data = (function () {
   // ── Overall (all-years) KPIs across site filter ──────────────
   function getOverallKPIs(state) {
     var trend = getAggYearly(state);
-    var totals = {farmers: new Set(), prod: 0, riel: 0, kg: 0, area: 0, planted: 0, fallow: 0, other: 0};
+    var totals = {farmers: new Set(), prod: 0, riel: 0, amt_riel: 0, kg: 0, area: 0, planted: 0, fallow: 0, other: 0};
     // Add unique farmers from farmer_records matching sites
     _raw.farmer_records.forEach(function (f) {
       if (state.sites.has(f.site)) totals.farmers.add(f.uid);
@@ -165,6 +166,7 @@ var Data = (function () {
     trend.forEach(function (d) {
       totals.prod += d.prod_kg;
       totals.riel += d.purch_riel;
+      totals.amt_riel += (d.purch_amount_riel !== undefined ? d.purch_amount_riel : d.purch_riel) || 0;
       totals.kg   += d.purch_kg;
       totals.area += d.area_ha;
       totals.planted += d.planted_area_ha || 0;
@@ -181,7 +183,7 @@ var Data = (function () {
       total_fallow_area_ha:  Math.round(totals.fallow * 10) / 10,
       total_other_area_ha:   Math.round(totals.other * 10) / 10,
       avg_yield:     totals.planted ? Math.round(totals.prod / totals.planted * 10) / 10 : 0,
-      avg_price:     totals.kg ? Math.round(totals.riel / totals.kg) : 0,
+      avg_price:     totals.kg ? Math.round(totals.amt_riel / totals.kg) : 0,
     };
   }
 
