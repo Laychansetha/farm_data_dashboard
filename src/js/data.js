@@ -75,7 +75,8 @@ var Data = (function () {
     var years = Array.from(state.years).sort();
     return years.map(function (y) {
       var total = {year: y, unique_farmers: 0, new: 0, existing: 0, rejoin: 0,
-                   prod_kg: 0, purch_kg: 0, purch_riel: 0, area_ha: 0, planted_area_ha: 0, fallow_area_ha: 0, other_area_ha: 0, compliance_sum: 0, compliance_n: 0};
+                   prod_kg: 0, purch_kg: 0, purch_riel: 0, area_ha: 0, planted_area_ha: 0, fallow_area_ha: 0, other_area_ha: 0, compliance_sum: 0, compliance_n: 0,
+                   cert: {}, land_sit: {}, land_own: {}, irrigation: {}};
       Object.keys(syd).forEach(function (sn) {
         var d = syd[sn][y];
         if (!d) return;
@@ -92,6 +93,31 @@ var Data = (function () {
         total.other_area_ha   += d.other_area_ha || 0;
         total.compliance_sum += (d.compliance_rate || 0) * (d.unique_farmers || 0);
         total.compliance_n   += d.unique_farmers || 0;
+
+        // Aggregate cert dict
+        if (d.cert) {
+          Object.keys(d.cert).forEach(function (k) {
+            total.cert[k] = (total.cert[k] || 0) + d.cert[k];
+          });
+        }
+        // Aggregate land_sit dict
+        if (d.land_sit) {
+          Object.keys(d.land_sit).forEach(function (k) {
+            total.land_sit[k] = (total.land_sit[k] || 0) + d.land_sit[k];
+          });
+        }
+        // Aggregate land_own dict
+        if (d.land_own) {
+          Object.keys(d.land_own).forEach(function (k) {
+            total.land_own[k] = (total.land_own[k] || 0) + d.land_own[k];
+          });
+        }
+        // Aggregate irrigation dict
+        if (d.irrigation) {
+          Object.keys(d.irrigation).forEach(function (k) {
+            total.irrigation[k] = (total.irrigation[k] || 0) + d.irrigation[k];
+          });
+        }
       });
       total.compliance_rate = total.compliance_n ? Math.round(total.compliance_sum / total.compliance_n * 10) / 10 : 0;
       total.avg_yield = total.planted_area_ha ? Math.round(total.prod_kg / total.planted_area_ha * 10) / 10 : 0;

@@ -234,7 +234,11 @@ def main():
         return {'farmers': set(), 'insp': 0, 'compliant': 0, 'area_ha': 0.0,
                 'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
                 'prod_kg': 0.0, 'purch_kg': 0.0, 'purch_riel': 0.0,
-                'new': 0, 'existing': 0, 'rejoin': 0, 'cert': defaultdict(int)}
+                'new': 0, 'existing': 0, 'rejoin': 0,
+                'cert': defaultdict(int),
+                'land_sit': defaultdict(int),
+                'land_own': defaultdict(int),
+                'irrigation': defaultdict(int)}
 
     sy = defaultdict(lambda: defaultdict(new_sy))
 
@@ -261,6 +265,9 @@ def main():
             elif fs == 'Existing': d['existing'] += 1
             elif fs == 'Rejoin': d['rejoin'] += 1
         d['cert'][normalize_cert(r.get('status_harvest', ''))] += 1
+        d['land_sit'][(r.get('land_situation', '') or 'Unknown').strip()] += 1
+        d['land_own'][(r.get('land_ownership', '')  or 'Unknown').strip()] += 1
+        d['irrigation'][(r.get('irrigation_system', '') or 'None').strip()] += 1
 
     for r in threshings:
         y = r.get('data_year', ''); uid = r.get('farmer_uid', '')
@@ -297,6 +304,9 @@ def main():
                 'purch_riel': round(d['purch_riel']),
                 'avg_yield_kg_ha': round(yield_ha, 1),
                 'cert': dict(d['cert']),
+                'land_sit': dict(d['land_sit']),
+                'land_own': dict(d['land_own']),
+                'irrigation': dict(d['irrigation']),
             }
 
     # ── 5. Village stats ──────────────────────────────────────────
