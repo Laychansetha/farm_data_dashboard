@@ -347,10 +347,30 @@
     badge.style.color = col;
     badge.textContent = 'Active Site';
 
+    // Show dynamic sections
+    document.getElementById('geo-village-section').style.display = 'block';
+    document.getElementById('geo-trend-section').style.display = 'block';
+    document.getElementById('geo-village-count').textContent = '(' + (d.total_villages || 0) + ')';
+
     var kpis = document.getElementById('geo-site-kpis');
     kpis.innerHTML = 
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Active Farmers</div><div class="geo-kpi-val">' + d.total_farmers.toLocaleString() + '</div></div>' +
-      '<div class="geo-kpi-item"><div class="geo-kpi-label">Farmland Area</div><div class="geo-kpi-val">' + d.area_ha.toLocaleString() + ' Ha</div><div style="font-size:0.75rem; color:var(--text-2); margin-top:4px; line-height:1.3;">Planted: ' + (d.planted_area_ha || 0).toLocaleString() + ' Ha<br>Fallow: ' + (d.fallow_area_ha || 0).toLocaleString() + ' Ha<br>Other: ' + (d.other_area_ha || 0).toLocaleString() + ' Ha</div></div>' +
+      '<div class="geo-kpi-item" style="flex-direction:column; align-items:stretch; gap:6px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+          '<div class="geo-kpi-label">Farmland Area</div>' +
+          '<div class="geo-kpi-val">' + d.area_ha.toLocaleString() + ' Ha</div>' +
+        '</div>' +
+        '<div class="geo-land-progress-bar" style="display:flex; height:6px; border-radius:3px; overflow:hidden; margin:4px 0; background:rgba(255,255,255,0.1);">' +
+          '<div style="width:' + ((d.planted_area_ha / d.area_ha * 100) || 0) + '%; background:#00D4A8;" title="Planted"></div>' +
+          '<div style="width:' + ((d.fallow_area_ha / d.area_ha * 100) || 0) + '%; background:#F59E0B;" title="Fallow"></div>' +
+          '<div style="width:' + ((d.other_area_ha / d.area_ha * 100) || 0) + '%; background:#A78BFA;" title="Other"></div>' +
+        '</div>' +
+        '<div class="geo-land-legend" style="display:flex; flex-direction:column; gap:4px; font-size:0.72rem; color:var(--text-2); margin-top:2px;">' +
+          '<div style="display:flex; justify-content:space-between;"><span><span style="display:inline-block; width:6px; height:6px; background:#00D4A8; border-radius:50%; margin-right:6px;"></span>Planted Area:</span><span class="fw-600" style="color:var(--text-1);">' + (d.planted_area_ha || 0).toLocaleString() + ' Ha</span></div>' +
+          '<div style="display:flex; justify-content:space-between;"><span><span style="display:inline-block; width:6px; height:6px; background:#F59E0B; border-radius:50%; margin-right:6px;"></span>Fallow Area:</span><span class="fw-600" style="color:var(--text-1);">' + (d.fallow_area_ha || 0).toLocaleString() + ' Ha</span></div>' +
+          '<div style="display:flex; justify-content:space-between;"><span><span style="display:inline-block; width:6px; height:6px; background:#A78BFA; border-radius:50%; margin-right:6px;"></span>Other Area:</span><span class="fw-600" style="color:var(--text-1);">' + (d.other_area_ha || 0).toLocaleString() + ' Ha</span></div>' +
+        '</div>' +
+      '</div>' +
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Paddy Yield</div><div class="geo-kpi-val">' + d.avg_yield.toLocaleString() + ' Kg/Ha</div></div>' +
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Program Revenue</div><div class="geo-kpi-val">' + Data.rielFmt(d.purch_riel) + '</div></div>';
 
@@ -361,6 +381,12 @@
     vData.forEach(function (v) {
       vList.innerHTML += '<div class="geo-village-item">' + v.village + ' <span>' + v.total_farmers + ' farmers</span></div>';
     });
+
+    // Render Farmer Trend for this site
+    var siteYears = Data.raw().site_year[name];
+    if (siteYears) {
+      Charts.renderMiniSiteTrend('chart-geo-site-trend', name, siteYears);
+    }
   }
 
   // ── Farmer Record Table ─────────────────────────────────────

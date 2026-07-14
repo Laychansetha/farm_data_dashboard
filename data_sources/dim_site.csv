@@ -1,6 +1,6 @@
-site_name,site_id
-Preah Vihear,1
-Prey Lang,2
-Siem Pang,3
-Ratanakiri,4
-Mondolkiri,5
+site_name,site_id,lat,lng
+Preah Vihear,1,13.796,104.98
+Prey Lang,2,12.95,105.5
+Siem Pang,3,14.12,106.37
+Ratanakiri,4,13.735,106.987
+Mondolkiri,5,12.4535,107.1877

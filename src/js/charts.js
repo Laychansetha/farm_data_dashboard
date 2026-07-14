@@ -949,6 +949,37 @@ var Charts = (function () {
     });
   }
 
+  // ── 30. Mini Site Farmer Trend (line) ─────────────────────────
+  function renderMiniSiteTrend(id, name, siteYears) {
+    var yrs = Object.keys(siteYears).sort();
+    var data = yrs.map(function (y) { return siteYears[y].unique_farmers || 0; });
+    var color = SITE_COLORS[name] || '#6B7280';
+    return create(id, {
+      type: 'line',
+      data: {
+        labels: yrs,
+        datasets: [{
+          label: 'Farmers',
+          data: data,
+          borderColor: color,
+          backgroundColor: alpha(color, 0.1),
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: xAxis,
+          y: {grid: gridOpts, ticks: {color: '#9BAAC5', font: {size: 10}, precision: 0}}
+        },
+        plugins: {legend: {display: false}, tooltip: {enabled: true}},
+      }
+    });
+  }
+
   return {
     initDefaults: initDefaults,
     destroy: destroy,
@@ -983,5 +1014,6 @@ var Charts = (function () {
     renderLandOwn: renderLandOwn,
     renderIrrigation: renderIrrigation,
     renderSiteComparison: renderSiteComparison,
+    renderMiniSiteTrend: renderMiniSiteTrend,
   };
 })();

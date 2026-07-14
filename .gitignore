@@ -9,3 +9,5 @@ __pycache__/
 .pytest_cache/
 .tox/
 .ruff_cache/
+data_sources/raw_backup/
+scratch/

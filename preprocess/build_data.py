@@ -30,11 +30,11 @@ OUTPUT_JS  = os.path.join(OUTPUT_DIR, 'dashboard_data.js')
 
 # ── Cambodia site coordinates ─────────────────────────────────────────────────
 SITE_COORDS = {
-    '1': {'name': 'Mondolkiri',   'lat': 12.4535, 'lng': 107.1877},
-    '2': {'name': 'Preah Vihear', 'lat': 13.7960, 'lng': 104.9800},
-    '3': {'name': 'Prey Lang',    'lat': 12.9500, 'lng': 105.5000},
+    '1': {'name': 'Preah Vihear', 'lat': 13.7960, 'lng': 104.9800},
+    '2': {'name': 'Prey Lang',    'lat': 12.9500, 'lng': 105.5000},
+    '3': {'name': 'Siem Pang',    'lat': 14.1200, 'lng': 106.3700},
     '4': {'name': 'Ratanakiri',   'lat': 13.7350, 'lng': 106.9870},
-    '5': {'name': 'Siem Pang',    'lat': 14.1200, 'lng': 106.3700},
+    '5': {'name': 'Mondolkiri',   'lat': 12.4535, 'lng': 107.1877},
 }
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -114,7 +114,8 @@ def main():
     print(f"     Sites: {len(sites_raw)} | Villages: {len(villages_raw)} | Farmers: {len(farmers_map)}")
 
     def farmer_site_id(uid):
-        return farmers_map.get(uid, {}).get('site_id', '')
+        vid = farmer_village_id(uid)
+        return villages_raw.get(str(vid), {}).get('site_id', '')
 
     def farmer_village_id(uid):
         return farmers_map.get(uid, {}).get('village_id', '')
@@ -127,10 +128,10 @@ def main():
 
     # ── 2. Load fact tables ───────────────────────────────────────
     print("[2/8] Loading fact tables…")
-    inspections  = read_csv('fact_afl_inspection.csv')
-    purchases    = read_csv('fact_ppr_purchase.csv')
-    threshings   = read_csv('fact_thr_threshing.csv')
-    spec_records = read_csv('fact_ppr_spec_record.csv')
+    inspections  = read_csv('fact_plot_inspection.csv')
+    purchases    = read_csv('fact_purchase.csv')
+    threshings   = read_csv('fact_threshing.csv')
+    spec_records = read_csv('fact_quality_spec.csv')
     print(f"     Inspections: {len(inspections):,} | Purchases: {len(purchases):,} | Threshings: {len(threshings):,} | Specs: {len(spec_records):,}")
 
     all_years = sorted({r['data_year'] for r in inspections if r.get('data_year')} |
@@ -138,6 +139,26 @@ def main():
                        {r['data_year'] for r in threshings   if r.get('data_year')})
 
     latest_year = all_years[-1] if all_years else ''
+
+    # Compute active years per farmer for dynamic dims
+    farmer_years = defaultdict(set)
+    for r in inspections:
+        uid = r.get('farmer_uid', '')
+        y   = r.get('data_year', '')
+        if uid and y: farmer_years[uid].add(y)
+    for r in purchases:
+        uid = r.get('farmer_uid', '')
+        y   = r.get('data_year', '')
+        if uid and y: farmer_years[uid].add(y)
+    for r in threshings:
+        uid = r.get('farmer_uid', '')
+        y   = r.get('data_year', '')
+        if uid and y: farmer_years[uid].add(y)
+
+    # Populate site_name on villages raw for backwards compatibility
+    for r in villages_raw.values():
+        sid = r.get('site_id', '')
+        r['site_name'] = sites_raw.get(str(sid), {}).get('site_name', 'Unknown')
 
     # ── 3. Yearly trend ───────────────────────────────────────────
     print("[3/8] Computing yearly trends…")
@@ -165,7 +186,7 @@ def main():
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
         p = safe_float(r.get('planted_area_ha'))
         f = safe_float(r.get('fallow_area_ha'))
-        o = safe_float(r.get('other_(ha)'))
+        o = safe_float(r.get('other_area_ha'))
         d['planted_area_ha'] += p
         d['fallow_area_ha'] += f
         d['other_area_ha'] += o
@@ -265,7 +286,7 @@ def main():
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
         p = safe_float(r.get('planted_area_ha'))
         f = safe_float(r.get('fallow_area_ha'))
-        o = safe_float(r.get('other_(ha)'))
+        o = safe_float(r.get('other_area_ha'))
         d['planted_area_ha'] += p
         d['fallow_area_ha'] += f
         d['other_area_ha'] += o
@@ -291,7 +312,8 @@ def main():
     for r in purchases:
         y = r.get('data_year', '')
         if not y: continue
-        sid = r.get('site_id', '')
+        uid = r.get('farmer_uid', '')
+        sid = farmer_site_id(uid)
         sn  = site_name(sid) if sid else 'Unknown'
         sy[sn][y]['purch_kg']   += safe_float(r.get('quantity_kg'))
         sy[sn][y]['purch_riel'] += safe_float(r.get('total_payment_riel'))
@@ -348,7 +370,7 @@ def main():
         d['years'].add(r.get('data_year', ''))
         p = safe_float(r.get('planted_area_ha'))
         f = safe_float(r.get('fallow_area_ha'))
-        o = safe_float(r.get('other_(ha)'))
+        o = safe_float(r.get('other_area_ha'))
         d['planted_area_ha'] += p
         d['fallow_area_ha'] += f
         d['other_area_ha'] += o
@@ -364,7 +386,7 @@ def main():
     for r in purchases:
         if r.get('data_year') != latest_year: continue
         uid = r.get('farmer_uid', '')
-        vid = r.get('village_id', '') or farmer_village_id(uid)
+        vid = farmer_village_id(uid)
         vn  = village_name(vid)
         vill[vn]['purch_kg']   += safe_float(r.get('quantity_kg'))
         vill[vn]['purch_riel'] += safe_float(r.get('total_payment_riel'))
@@ -499,7 +521,7 @@ def main():
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
         p = safe_float(r.get('planted_area_ha'))
         f = safe_float(r.get('fallow_area_ha'))
-        o = safe_float(r.get('other_(ha)'))
+        o = safe_float(r.get('other_area_ha'))
         d['planted_area_ha'] += p
         d['fallow_area_ha']  += f
         d['other_area_ha']   += o
@@ -529,8 +551,8 @@ def main():
     for r in farmers_list:
         uid = r.get('farmer_uid', '')
         vid = r.get('village_id', '')
-        sid = r.get('site_id', '')
         v   = villages_raw.get(str(vid), {})
+        sid = v.get('site_id', '')
         s   = sites_raw.get(str(sid), {})
         d   = fstats.get(uid, {})
         ti  = d.get('insp', 0)
@@ -542,15 +564,21 @@ def main():
         yh  = pk / ap if ap > 0 else None
         cr  = pct(d.get('compliant', 0), ti) if ti else None
         yrs = sorted(d.get('years', set()))
+
+        f_yrs = farmer_years.get(uid, set())
+        first_yr = min(f_yrs) if f_yrs else ''
+        last_yr = max(f_yrs) if f_yrs else ''
+        is_active = 'Yes' if (last_yr and last_yr >= latest_year) else 'No'
+
         farmer_records.append({
             'uid':          uid,
             'family_id':    r.get('family_id', ''),
             'site':         s.get('site_name', v.get('site_name', 'Unknown')),
             'village':      v.get('village_name', 'Unknown'),
             'gender':       (r.get('gender') or 'Unknown').strip(),
-            'first_year':   r.get('first_year_seen', ''),
-            'last_year':    r.get('last_year_seen', ''),
-            'active':       r.get('current_status', ''),
+            'first_year':   first_yr,
+            'last_year':    last_yr,
+            'active':       is_active,
             'insp_total':   ti,
             'compliance':   round(cr, 1) if cr is not None else None,
             'area_ha':      round(ar, 2),
@@ -586,7 +614,7 @@ def main():
                 if r.get('compliant', '').lower() == 'yes': tot_comp += 1
                 p = safe_float(r.get('planted_area_ha'))
                 f = safe_float(r.get('fallow_area_ha'))
-                o = safe_float(r.get('other_(ha)'))
+                o = safe_float(r.get('other_area_ha'))
                 tot_planted += p
                 tot_fallow += f
                 tot_other += o
@@ -598,7 +626,8 @@ def main():
                 tot_prod += safe_float(r.get('actual_total_rice_production_kg'))
         for r in purchases:
             if r.get('data_year') != latest_year: continue
-            rid = r.get('site_id', '')
+            ruid = r.get('farmer_uid', '')
+            rid = farmer_site_id(ruid)
             if rid == sid:
                 tot_riel += safe_float(r.get('total_payment_riel'))
                 amt = safe_float(r.get('total_amount_riel'))
@@ -639,7 +668,7 @@ def main():
     for r in inspections:
         all_planted += safe_float(r.get('planted_area_ha'))
         all_fallow  += safe_float(r.get('fallow_area_ha'))
-        all_other   += safe_float(r.get('other_(ha)'))
+        all_other   += safe_float(r.get('other_area_ha'))
     all_a = all_planted + all_fallow + all_other
     all_c   = sum(1 for r in inspections if r.get('compliant', '').lower() == 'yes')
     all_i   = len(inspections)

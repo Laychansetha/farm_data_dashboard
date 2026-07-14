@@ -470,9 +470,13 @@
                 <span class="chart-badge badge-green" id="geo-site-badge"></span>
               </div>
               <div id="geo-site-kpis" class="geo-kpi-list"></div>
-              <div class="geo-village-section">
-                <h4>Villages in this site</h4>
+              <div class="geo-village-section" id="geo-village-section" style="display:none;">
+                <h4>Villages in this site <span id="geo-village-count" class="text-muted" style="font-size:0.85rem; font-weight:normal; margin-left:4px;"></span></h4>
                 <div id="geo-village-list" class="geo-village-list"></div>
+              </div>
+              <div class="geo-trend-section" id="geo-trend-section" style="display:none; margin-top:20px; border-top: 1px solid var(--white-05); padding-top:16px;">
+                <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:8px; color:var(--text-1);">Active Farmers over Time</h4>
+                <div style="height:120px;"><canvas id="chart-geo-site-trend"></canvas></div>
               </div>
             </div>
           </div>

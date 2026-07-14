@@ -1,61 +1,61 @@
-village_name,site_name,site_id,village_id,irpg_name,irpg_id
-Prey Veng,Preah Vihear,1,1,IRPG01,1
-Sambou,Preah Vihear,1,2,IRPG01,1
-Damnak Kantout,Preah Vihear,1,3,IRPG02,2
-Dan,Preah Vihear,1,4,IRPG02,2
-Pongro,Preah Vihear,1,5,IRPG02,2
-Kampenh,Preah Vihear,1,6,IRPG03,3
-Kong Yoang,Preah Vihear,1,7,IRPG03,3
-Yeang,Preah Vihear,1,8,IRPG03,3
-Krala Peas,Preah Vihear,1,9,IRPG04,4
-Okak,Preah Vihear,1,10,IRPG04,4
-Tmat Paeuy,Preah Vihear,1,11,IRPG04,4
-Bra,Preah Vihear,1,12,IRPG05,5
-Dang Phlet,Preah Vihear,1,13,IRPG05,5
-Narong,Preah Vihear,1,14,IRPG05,5
-Kampong Sangkae,Preah Vihear,1,15,IRPG06,6
-Kham Keut,Preah Vihear,1,16,IRPG06,6
-Soung,Preah Vihear,1,17,IRPG06,6
-Doung,Prey Lang,2,18,IRPG07,7
-Kang Cham,Prey Lang,2,19,IRPG07,7
-Kang Kngaok,Prey Lang,2,20,IRPG07,7
-Kes,Prey Lang,2,21,IRPG07,7
-Pong Tek,Prey Lang,2,22,IRPG07,7
-Toal,Prey Lang,2,23,IRPG07,7
-Tonsong,Prey Lang,2,24,IRPG07,7
-Kham Phouk,Siem Pang,3,25,IRPG08,8
-Khes Kroam,Siem Pang,3,26,IRPG08,8
-Khes Svay,Siem Pang,3,27,IRPG08,8
-Pong Kriel,Siem Pang,3,28,IRPG08,8
-Ban Moung,Siem Pang,3,29,IRPG09,9
-Chantu,Siem Pang,3,30,IRPG09,9
-Dan Loung,Siem Pang,3,31,IRPG09,9
-Keng Nhai,Siem Pang,3,32,IRPG09,9
-Phum Lun,Siem Pang,3,33,IRPG09,9
-Samor,Siem Pang,3,34,IRPG09,9
-Siem Pang,Siem Pang,3,35,IRPG09,9
-Kanchanh Kouk,Siem Pang,3,36,IRPG10,10
-O'Chay,Siem Pang,3,37,IRPG10,10
-Peam Khes,Siem Pang,3,38,IRPG10,10
-Srae Russei,Siem Pang,3,39,IRPG10,10
-Teteam,Siem Pang,3,40,IRPG10,10
-La Kay,Siem Pang,3,41,IRPG11,11
-Nhang Sum,Siem Pang,3,42,IRPG11,11
-Pha Bang,Siem Pang,3,43,IRPG11,11
-Bak Kae,Ratanakiri,4,44,IRPG12,12
-I-Tub,Ratanakiri,4,45,IRPG12,12
-Kalan,Ratanakiri,4,46,IRPG12,12
-Korng Nork,Ratanakiri,4,47,IRPG12,12
-Srae Chhuk,Ratanakiri,4,48,IRPG13,13
-Srae Pokthom,Ratanakiri,4,49,IRPG13,13
-Srae Poktoch,Ratanakiri,4,50,IRPG13,13
-Thmey,Ratanakiri,4,51,IRPG13,13
-Roveak,Ratanakiri,4,52,IRPG14,14
-Srae Chrey,Ratanakiri,4,53,IRPG14,14
-Ou Chra,Mondolkiri,5,54,IRPG15,15
-Pu Char,Mondolkiri,5,55,IRPG15,15
-Pu Kung,Mondolkiri,5,56,IRPG15,15
-Chokchar,Mondolkiri,5,57,IRPG16,16
-Kmoum,Mondolkiri,5,58,IRPG16,16
-Ktung,Mondolkiri,5,59,IRPG16,16
-Sre Andaol,Mondolkiri,5,60,IRPG16,16
+village_name,site_id,village_id,irpg_id
+Prey Veng,1,1,1
+Sambou,1,2,1
+Damnak Kantout,1,3,2
+Dan,1,4,2
+Pongro,1,5,2
+Kampenh,1,6,3
+Kong Yoang,1,7,3
+Yeang,1,8,3
+Krala Peas,1,9,4
+Okak,1,10,4
+Tmat Paeuy,1,11,4
+Bra,1,12,5
+Dang Phlet,1,13,5
+Narong,1,14,5
+Kampong Sangkae,1,15,6
+Kham Keut,1,16,6
+Soung,1,17,6
+Doung,2,18,7
+Kang Cham,2,19,7
+Kang Kngaok,2,20,7
+Kes,2,21,7
+Pong Tek,2,22,7
+Toal,2,23,7
+Tonsong,2,24,7
+Kham Phouk,3,25,8
+Khes Kroam,3,26,8
+Khes Svay,3,27,8
+Pong Kriel,3,28,8
+Ban Moung,3,29,9
+Chantu,3,30,9
+Dan Loung,3,31,9
+Keng Nhai,3,32,9
+Phum Lun,3,33,9
+Samor,3,34,9
+Siem Pang,3,35,9
+Kanchanh Kouk,3,36,10
+O'Chay,3,37,10
+Peam Khes,3,38,10
+Srae Russei,3,39,10
+Teteam,3,40,10
+La Kay,3,41,11
+Nhang Sum,3,42,11
+Pha Bang,3,43,11
+Bak Kae,4,44,12
+I-Tub,4,45,12
+Kalan,4,46,12
+Korng Nork,4,47,12
+Srae Chhuk,4,48,13
+Srae Pokthom,4,49,13
+Srae Poktoch,4,50,13
+Thmey,4,51,13
+Roveak,4,52,14
+Srae Chrey,4,53,14
+Ou Chra,5,54,15
+Pu Char,5,55,15
+Pu Kung,5,56,15
+Chokchar,5,57,16
+Kmoum,5,58,16
+Ktung,5,59,16
+Sre Andaol,5,60,16
