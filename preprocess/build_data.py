@@ -137,7 +137,8 @@ def main():
     def new_yr():
         return {
             'farmers': set(), 'insp': 0, 'compliant': 0,
-            'area_ha': 0.0, 'new': 0, 'existing': 0, 'rejoin': 0,
+            'area_ha': 0.0, 'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
+            'new': 0, 'existing': 0, 'rejoin': 0,
             'cert': defaultdict(int), 'land_sit': defaultdict(int),
             'land_own': defaultdict(int), 'irrigation': defaultdict(int),
             'prod_kg': 0.0, 'sell_kg': 0.0, 'consume_kg': 0.0, 'seed_kg': 0.0,
@@ -154,8 +155,13 @@ def main():
         d = yr_data[y]
         d['farmers'].add(uid); d['insp'] += 1
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
-        a = safe_float(r.get('surface_area_ha'))
-        if 0 < a < 500: d['area_ha'] += a
+        p = safe_float(r.get('planted_area_ha'))
+        f = safe_float(r.get('fallow_area_ha'))
+        o = safe_float(r.get('other_(ha)'))
+        d['planted_area_ha'] += p
+        d['fallow_area_ha'] += f
+        d['other_area_ha'] += o
+        d['area_ha'] += (p + f + o)
         fs = normalize_farmer_status(r.get('farmer_status', ''))
         key = (y, uid, fs)
         if key not in seen_yearly_farmer:
@@ -193,7 +199,7 @@ def main():
     for y in all_years:
         d = yr_data[y]
         fc = len(d['farmers'])
-        yield_ha = d['prod_kg'] / d['area_ha'] if d['area_ha'] else 0
+        yield_ha = d['prod_kg'] / d['planted_area_ha'] if d['planted_area_ha'] else 0
         avg_price = d['purch_riel'] / d['purch_kg'] if d['purch_kg'] else 0
         yearly_trend.append({
             'year': y,
@@ -202,6 +208,9 @@ def main():
             'total_inspections': d['insp'],
             'compliance_rate': pct(d['compliant'], d['insp']),
             'total_area_ha': round(d['area_ha'], 1),
+            'planted_area_ha': round(d['planted_area_ha'], 1),
+            'fallow_area_ha': round(d['fallow_area_ha'], 1),
+            'other_area_ha': round(d['other_area_ha'], 1),
             'prod_kg': round(d['prod_kg']),
             'sell_kg': round(d['sell_kg']),
             'consume_kg': round(d['consume_kg']),
@@ -223,6 +232,7 @@ def main():
 
     def new_sy():
         return {'farmers': set(), 'insp': 0, 'compliant': 0, 'area_ha': 0.0,
+                'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
                 'prod_kg': 0.0, 'purch_kg': 0.0, 'purch_riel': 0.0,
                 'new': 0, 'existing': 0, 'rejoin': 0, 'cert': defaultdict(int)}
 
@@ -236,8 +246,13 @@ def main():
         d  = sy[sn][y]
         d['farmers'].add(uid); d['insp'] += 1
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
-        a = safe_float(r.get('surface_area_ha'))
-        if 0 < a < 500: d['area_ha'] += a
+        p = safe_float(r.get('planted_area_ha'))
+        f = safe_float(r.get('fallow_area_ha'))
+        o = safe_float(r.get('other_(ha)'))
+        d['planted_area_ha'] += p
+        d['fallow_area_ha'] += f
+        d['other_area_ha'] += o
+        d['area_ha'] += (p + f + o)
         fs = normalize_farmer_status(r.get('farmer_status', ''))
         key = (sn, y, uid, fs)
         if key not in seen_site_yearly_farmer:
@@ -266,7 +281,7 @@ def main():
         site_year[sn] = {}
         for y, d in ydict.items():
             fc = len(d['farmers'])
-            yield_ha = d['prod_kg'] / d['area_ha'] if d['area_ha'] else 0
+            yield_ha = d['prod_kg'] / d['planted_area_ha'] if d['planted_area_ha'] else 0
             site_year[sn][y] = {
                 'unique_farmers': fc,
                 'new': d['new'], 'existing': d['existing'], 'rejoin': d['rejoin'],
@@ -274,6 +289,9 @@ def main():
                 'compliant_count': d['compliant'],
                 'inspection_count': d['insp'],
                 'total_area_ha': round(d['area_ha'], 1),
+                'planted_area_ha': round(d['planted_area_ha'], 1),
+                'fallow_area_ha': round(d['fallow_area_ha'], 1),
+                'other_area_ha': round(d['other_area_ha'], 1),
                 'prod_kg': round(d['prod_kg']),
                 'purch_kg': round(d['purch_kg']),
                 'purch_riel': round(d['purch_riel']),
@@ -286,7 +304,8 @@ def main():
 
     def new_vill():
         return {'farmers': set(), 'site': '', 'prod_kg': 0.0,
-                'area_ha': 0.0, 'purch_kg': 0.0, 'purch_riel': 0.0, 'years': set()}
+                'area_ha': 0.0, 'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
+                'purch_kg': 0.0, 'purch_riel': 0.0, 'years': set()}
 
     vill = defaultdict(new_vill)
 
@@ -299,8 +318,13 @@ def main():
         d['site'] = site_name(farmer_site_id(uid))
         d['farmers'].add(uid)
         d['years'].add(r.get('data_year', ''))
-        a = safe_float(r.get('surface_area_ha'))
-        if 0 < a < 500: d['area_ha'] += a
+        p = safe_float(r.get('planted_area_ha'))
+        f = safe_float(r.get('fallow_area_ha'))
+        o = safe_float(r.get('other_(ha)'))
+        d['planted_area_ha'] += p
+        d['fallow_area_ha'] += f
+        d['other_area_ha'] += o
+        d['area_ha'] += (p + f + o)
 
     for r in threshings:
         if r.get('data_year') != latest_year: continue
@@ -429,6 +453,7 @@ def main():
 
     fstats = defaultdict(lambda: {
         'insp': 0, 'compliant': 0, 'area_ha': 0.0,
+        'planted_area_ha': 0.0, 'fallow_area_ha': 0.0, 'other_area_ha': 0.0,
         'prod_kg': 0.0, 'purch_riel': 0.0, 'purch_kg': 0.0,
         'years': set(), 'varieties': set(), 'certs': set(),
         'latest_year': '', 'latest_cert': '', 'quality_n': 0,
@@ -439,8 +464,13 @@ def main():
         d   = fstats[uid]
         d['insp'] += 1
         if r.get('compliant', '').lower() == 'yes': d['compliant'] += 1
-        a = safe_float(r.get('surface_area_ha'))
-        if 0 < a < 500: d['area_ha'] += a
+        p = safe_float(r.get('planted_area_ha'))
+        f = safe_float(r.get('fallow_area_ha'))
+        o = safe_float(r.get('other_(ha)'))
+        d['planted_area_ha'] += p
+        d['fallow_area_ha']  += f
+        d['other_area_ha']   += o
+        d['area_ha']         += (p + f + o)
         d['years'].add(r.get('data_year', ''))
         v = (r.get('variety') or '').strip()
         if v: d['varieties'].add(v)
@@ -472,8 +502,11 @@ def main():
         d   = fstats.get(uid, {})
         ti  = d.get('insp', 0)
         ar  = d.get('area_ha', 0.0)
+        ap  = d.get('planted_area_ha', 0.0)
+        af  = d.get('fallow_area_ha', 0.0)
+        ao  = d.get('other_area_ha', 0.0)
         pk  = d.get('prod_kg', 0.0)
-        yh  = pk / ar if ar > 0 else None
+        yh  = pk / ap if ap > 0 else None
         cr  = pct(d.get('compliant', 0), ti) if ti else None
         yrs = sorted(d.get('years', set()))
         farmer_records.append({
@@ -488,6 +521,9 @@ def main():
             'insp_total':   ti,
             'compliance':   round(cr, 1) if cr is not None else None,
             'area_ha':      round(ar, 2),
+            'planted_area_ha': round(ap, 2),
+            'fallow_area_ha':  round(af, 2),
+            'other_area_ha':   round(ao, 2),
             'prod_kg':      round(pk),
             'purch_riel':   round(d.get('purch_riel', 0)),
             'purch_kg':     round(d.get('purch_kg', 0)),
@@ -507,6 +543,7 @@ def main():
     for sid, sc in SITE_COORDS.items():
         sn  = sc['name']
         all_f = set(); tot_prod = 0.0; tot_riel = 0.0; tot_area = 0.0
+        tot_planted = 0.0; tot_fallow = 0.0; tot_other = 0.0
         tot_insp = 0; tot_comp = 0; vills = set()
         for r in inspections:
             if r.get('data_year') != latest_year: continue
@@ -514,8 +551,13 @@ def main():
             if farmer_site_id(uid) == sid:
                 all_f.add(uid); tot_insp += 1
                 if r.get('compliant', '').lower() == 'yes': tot_comp += 1
-                a = safe_float(r.get('surface_area_ha'))
-                if 0 < a < 500: tot_area += a
+                p = safe_float(r.get('planted_area_ha'))
+                f = safe_float(r.get('fallow_area_ha'))
+                o = safe_float(r.get('other_(ha)'))
+                tot_planted += p
+                tot_fallow += f
+                tot_other += o
+                tot_area += (p + f + o)
                 vills.add(farmer_village_id(uid))
         for r in threshings:
             if r.get('data_year') != latest_year: continue
@@ -526,7 +568,7 @@ def main():
             rid = r.get('site_id', '')
             if rid == sid:
                 tot_riel += safe_float(r.get('total_payment_riel'))
-        yield_ha = tot_prod / tot_area if tot_area else 0
+        yield_ha = tot_prod / tot_planted if tot_planted else 0
         site_summary[sn] = {
             'site_id': sid, 'site_name': sn,
             'lat': sc['lat'], 'lng': sc['lng'],
@@ -535,17 +577,26 @@ def main():
             'prod_kg': round(tot_prod),
             'purch_riel': round(tot_riel),
             'area_ha': round(tot_area, 1),
+            'planted_area_ha': round(tot_planted, 1),
+            'fallow_area_ha': round(tot_fallow, 1),
+            'other_area_ha': round(tot_other, 1),
             'avg_yield': round(yield_ha, 1),
             'compliance_rate': pct(tot_comp, tot_insp),
         }
 
     # ── Overall KPIs ──────────────────────────────────────────────
-    all_f   = {r.get('farmer_uid', '') for r in inspections}
+    all_f   = {r.get('farmer_uid', '') for r in inspections if r.get('farmer_uid')}
     all_p   = sum(safe_float(r.get('actual_total_rice_production_kg')) for r in threshings)
     all_r   = sum(safe_float(r.get('total_payment_riel')) for r in purchases)
     all_q   = sum(safe_float(r.get('quantity_kg')) for r in purchases)
-    all_a   = sum(safe_float(r.get('surface_area_ha')) for r in inspections
-                  if 0 < safe_float(r.get('surface_area_ha')) < 500)
+    all_planted = 0.0
+    all_fallow = 0.0
+    all_other = 0.0
+    for r in inspections:
+        all_planted += safe_float(r.get('planted_area_ha'))
+        all_fallow  += safe_float(r.get('fallow_area_ha'))
+        all_other   += safe_float(r.get('other_(ha)'))
+    all_a = all_planted + all_fallow + all_other
     all_c   = sum(1 for r in inspections if r.get('compliant', '').lower() == 'yes')
     all_i   = len(inspections)
 
@@ -556,7 +607,10 @@ def main():
         'total_purch_kg': round(all_q),
         'compliance_rate': pct(all_c, all_i),
         'total_area_ha': round(all_a, 1),
-        'avg_yield_kg_ha': round(all_p / all_a, 1) if all_a else 0,
+        'total_planted_area_ha': round(all_planted, 1),
+        'total_fallow_area_ha': round(all_fallow, 1),
+        'total_other_area_ha': round(all_other, 1),
+        'avg_yield_kg_ha': round(all_p / all_planted, 1) if all_planted else 0,
         'avg_price_riel_kg': round(all_r / all_q) if all_q else 0,
         'total_inspections': all_i,
         'total_purchases': len(purchases),

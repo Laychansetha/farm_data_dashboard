@@ -75,7 +75,7 @@ var Data = (function () {
     var years = Array.from(state.years).sort();
     return years.map(function (y) {
       var total = {year: y, unique_farmers: 0, new: 0, existing: 0, rejoin: 0,
-                   prod_kg: 0, purch_kg: 0, purch_riel: 0, area_ha: 0, compliance_sum: 0, compliance_n: 0};
+                   prod_kg: 0, purch_kg: 0, purch_riel: 0, area_ha: 0, planted_area_ha: 0, fallow_area_ha: 0, other_area_ha: 0, compliance_sum: 0, compliance_n: 0};
       Object.keys(syd).forEach(function (sn) {
         var d = syd[sn][y];
         if (!d) return;
@@ -87,11 +87,14 @@ var Data = (function () {
         total.purch_kg       += d.purch_kg || 0;
         total.purch_riel     += d.purch_riel || 0;
         total.area_ha        += d.total_area_ha || 0;
+        total.planted_area_ha += d.planted_area_ha || 0;
+        total.fallow_area_ha  += d.fallow_area_ha || 0;
+        total.other_area_ha   += d.other_area_ha || 0;
         total.compliance_sum += (d.compliance_rate || 0) * (d.unique_farmers || 0);
         total.compliance_n   += d.unique_farmers || 0;
       });
       total.compliance_rate = total.compliance_n ? Math.round(total.compliance_sum / total.compliance_n * 10) / 10 : 0;
-      total.avg_yield = total.area_ha ? Math.round(total.prod_kg / total.area_ha * 10) / 10 : 0;
+      total.avg_yield = total.planted_area_ha ? Math.round(total.prod_kg / total.planted_area_ha * 10) / 10 : 0;
       total.avg_price = total.purch_kg ? Math.round(total.purch_riel / total.purch_kg) : 0;
       return total;
     });
@@ -115,6 +118,9 @@ var Data = (function () {
       purch_riel:  {val: latest.purch_riel,     chg: change('purch_riel')},
       compliance:  {val: latest.compliance_rate, chg: prev ? Math.round((latest.compliance_rate - prev.compliance_rate) * 10) / 10 : null, isPoints: true},
       area_ha:     {val: latest.area_ha,         chg: change('area_ha')},
+      planted_area_ha: {val: latest.planted_area_ha, chg: change('planted_area_ha')},
+      fallow_area_ha:  {val: latest.fallow_area_ha,  chg: change('fallow_area_ha')},
+      other_area_ha:   {val: latest.other_area_ha,   chg: change('other_area_ha')},
       avg_yield:   {val: latest.avg_yield,       chg: change('avg_yield')},
       avg_price:   {val: latest.avg_price,       chg: change('avg_price')},
       purch_kg:    {val: latest.purch_kg,        chg: change('purch_kg')},
@@ -125,7 +131,7 @@ var Data = (function () {
   // ── Overall (all-years) KPIs across site filter ──────────────
   function getOverallKPIs(state) {
     var trend = getAggYearly(state);
-    var totals = {farmers: new Set(), prod: 0, riel: 0, kg: 0, area: 0};
+    var totals = {farmers: new Set(), prod: 0, riel: 0, kg: 0, area: 0, planted: 0, fallow: 0, other: 0};
     // Add unique farmers from farmer_records matching sites
     _raw.farmer_records.forEach(function (f) {
       if (state.sites.has(f.site)) totals.farmers.add(f.uid);
@@ -135,6 +141,9 @@ var Data = (function () {
       totals.riel += d.purch_riel;
       totals.kg   += d.purch_kg;
       totals.area += d.area_ha;
+      totals.planted += d.planted_area_ha || 0;
+      totals.fallow  += d.fallow_area_ha || 0;
+      totals.other   += d.other_area_ha || 0;
     });
     return {
       total_farmers: totals.farmers.size,
@@ -142,7 +151,10 @@ var Data = (function () {
       total_riel:    Math.round(totals.riel),
       total_kg:      Math.round(totals.kg),
       total_area_ha: Math.round(totals.area * 10) / 10,
-      avg_yield:     totals.area ? Math.round(totals.prod / totals.area * 10) / 10 : 0,
+      total_planted_area_ha: Math.round(totals.planted * 10) / 10,
+      total_fallow_area_ha:  Math.round(totals.fallow * 10) / 10,
+      total_other_area_ha:   Math.round(totals.other * 10) / 10,
+      avg_yield:     totals.planted ? Math.round(totals.prod / totals.planted * 10) / 10 : 0,
       avg_price:     totals.kg ? Math.round(totals.riel / totals.kg) : 0,
     };
   }

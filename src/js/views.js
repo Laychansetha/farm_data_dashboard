@@ -185,7 +185,7 @@ var Views = (function () {
       var items = [
         { val: kpis.prod_kg ? kpis.prod_kg.val : 0, chg: kpis.prod_kg ? kpis.prod_kg.chg : null, label: 'Total Production', fmt: Data.kgFmt, cls: 'teal' },
         { val: kpis.avg_yield ? kpis.avg_yield.val : 0, chg: kpis.avg_yield ? kpis.avg_yield.chg : null, label: 'Avg Yield per Hectare', fmt: function (n) { return Data.numFmt(n, 1) + ' Kg/Ha'; }, cls: 'green' },
-        { val: kpis.area_ha ? kpis.area_ha.val : 0, chg: kpis.area_ha ? kpis.area_ha.chg : null, label: 'Cultivated Farmland', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'blue' }
+        { val: kpis.planted_area_ha ? kpis.planted_area_ha.val : 0, chg: kpis.planted_area_ha ? kpis.planted_area_ha.chg : null, label: 'Cultivated Farmland', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'blue' }
       ];
 
       items.forEach(function (it) {
@@ -309,9 +309,11 @@ var Views = (function () {
       targetEl.innerHTML = '';
 
       var items = [
-        { val: kpis.area_ha ? kpis.area_ha.val : 0, chg: kpis.area_ha ? kpis.area_ha.chg : null, label: 'Farmland Area (Hectares)', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'green' },
-        { val: kpis.farmers ? kpis.farmers.val : 0, chg: kpis.farmers ? kpis.farmers.chg : null, label: 'Inspected Farmers', fmt: Data.numFmt, cls: 'blue' },
-        { val: kpis.compliance ? kpis.compliance.val : 0, chg: kpis.compliance ? kpis.compliance.chg : null, label: 'Average Compliance Rate', fmt: Data.pctFmt, cls: 'teal' }
+        { val: kpis.area_ha ? kpis.area_ha.val : 0, chg: kpis.area_ha ? kpis.area_ha.chg : null, label: 'Total Farmland Area', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'green' },
+        { val: kpis.planted_area_ha ? kpis.planted_area_ha.val : 0, chg: kpis.planted_area_ha ? kpis.planted_area_ha.chg : null, label: 'Planted Area', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'blue' },
+        { val: kpis.fallow_area_ha ? kpis.fallow_area_ha.val : 0, chg: kpis.fallow_area_ha ? kpis.fallow_area_ha.chg : null, label: 'Fallow Area', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'gold' },
+        { val: kpis.other_area_ha ? kpis.other_area_ha.val : 0, chg: kpis.other_area_ha ? kpis.other_area_ha.chg : null, label: 'Other Area', fmt: function (n) { return Data.numFmt(n, 1) + ' Ha'; }, cls: 'purple' },
+        { val: kpis.farmers ? kpis.farmers.val : 0, chg: kpis.farmers ? kpis.farmers.chg : null, label: 'Inspected Farmers', fmt: Data.numFmt, cls: 'teal' }
       ];
 
       items.forEach(function (it) {

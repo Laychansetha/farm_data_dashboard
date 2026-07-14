@@ -1,23 +1,14 @@
 variety_name,variety_id,category
-Certified Seed,1,Rice
-Certified Seed Phka Rumduol,2,Rice
-Certified Seed Red Jasmine,3,Rice
-Collection rice,4,Rice
-Crop (Non rice),5,Rice
-Foundation Seed,6,Rice
-General,7,Rice
-Good Quality Seed,8,Rice
-HNN,9,Rice
-HNN Sticky Rice,10,Rice
-High Quality Seed Red Jasmine,11,Rice
-Local Variety,12,Rice
+Local Variety,1,Rice
+Phka Rumduol,2,Rice
+Sticky Rice,3,Rice
+Certified Seed Phka Rumduol,4,Rice
+Register Seed Phka Rumduol,5,Rice
+Red Jasmine,6,Rice
+Sticky HNN,7,Rice
+Certified Seed Red Jasmine,8,Rice
+High Quality Seed Red Jasmine,9,Rice
+Collection rice,10,Rice
+Sbai Mongkul Register Seed,11,Rice
+Crop (Non rice),12,Rice
 Mix (Rice and crop),13,Rice
-Normal,14,Rice
-Phka Rumduol,15,Rice
-Red Jasmine,16,Rice
-Register Seed,17,Rice
-Register Seed Phka Rumduol,18,Rice
-Sbai Mongkul Register Seed,19,Rice
-Sticky HNN,20,Rice
-Sticky Rice,21,Rice
-White Rice,22,Rice

@@ -760,25 +760,38 @@ var Charts = (function () {
     });
   }
 
-  // ── 24. Area Trend (line) ────────────────────────────────────
+  // ── 24. Area Trend (stacked bar) ─────────────────────────────
   function renderAreaTrend(id, trend) {
     var labels = trend.map(function (d) { return d.year; });
     return create(id, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: labels,
-        datasets: [{
-          label: 'Total Farmland (Ha)',
-          data: trend.map(function (d) { return Math.round(d.area_ha); }),
-          borderColor: '#00D4A8', backgroundColor: alpha('#00D4A8', 0.12),
-          borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#00D4A8',
-          tension: 0.4, fill: true,
-        }],
+        datasets: [
+          {
+            label: 'Planted Area (Ha)',
+            data: trend.map(function (d) { return Math.round(d.planted_area_ha || 0); }),
+            backgroundColor: '#00D4A8', stack: 's',
+          },
+          {
+            label: 'Fallow Area (Ha)',
+            data: trend.map(function (d) { return Math.round(d.fallow_area_ha || 0); }),
+            backgroundColor: '#F59E0B', stack: 's',
+          },
+          {
+            label: 'Other Area (Ha)',
+            data: trend.map(function (d) { return Math.round(d.other_area_ha || 0); }),
+            backgroundColor: '#A78BFA', stack: 's',
+          },
+        ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        scales: {x: xAxis, y: yAxis('Hectares (Ha)')},
-        plugins: {legend: {display: false}},
+        scales: {
+          x: xAxis,
+          y: Object.assign({}, yAxis('Hectares (Ha)'), {stacked: true, beginAtZero: true}),
+        },
+        plugins: {legend: {position: 'top'}},
       },
     });
   }

@@ -350,7 +350,7 @@
     var kpis = document.getElementById('geo-site-kpis');
     kpis.innerHTML = 
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Active Farmers</div><div class="geo-kpi-val">' + d.total_farmers.toLocaleString() + '</div></div>' +
-      '<div class="geo-kpi-item"><div class="geo-kpi-label">Farmland Area</div><div class="geo-kpi-val">' + d.area_ha.toLocaleString() + ' Ha</div></div>' +
+      '<div class="geo-kpi-item"><div class="geo-kpi-label">Farmland Area</div><div class="geo-kpi-val">' + d.area_ha.toLocaleString() + ' Ha</div><div style="font-size:0.75rem; color:var(--text-2); margin-top:4px; line-height:1.3;">Planted: ' + (d.planted_area_ha || 0).toLocaleString() + ' Ha<br>Fallow: ' + (d.fallow_area_ha || 0).toLocaleString() + ' Ha<br>Other: ' + (d.other_area_ha || 0).toLocaleString() + ' Ha</div></div>' +
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Paddy Yield</div><div class="geo-kpi-val">' + d.avg_yield.toLocaleString() + ' Kg/Ha</div></div>' +
       '<div class="geo-kpi-item"><div class="geo-kpi-label">Program Revenue</div><div class="geo-kpi-val">' + Data.rielFmt(d.purch_riel) + '</div></div>';
 
@@ -555,7 +555,7 @@
     mk.innerHTML = 
       '<div class="modal-kpi"><div class="modal-kpi-val">' + Data.kgFmt(f.prod_kg) + '</div><div class="modal-kpi-label">Cumulative Prod</div></div>' +
       '<div class="modal-kpi-val modal-kpi"><div class="modal-kpi-val">' + Data.rielFmt(f.purch_riel) + '</div><div class="modal-kpi-label">Cumulative Income</div></div>' +
-      '<div class="modal-kpi"><div class="modal-kpi-val">' + (f.area_ha != null ? f.area_ha.toFixed(2) + ' Ha' : '—') + '</div><div class="modal-kpi-label">Inspected Area</div></div>';
+      '<div class="modal-kpi"><div class="modal-kpi-val">' + (f.area_ha != null ? f.area_ha.toFixed(2) + ' Ha' : '—') + '</div><div class="modal-kpi-label">Inspected Area</div><div class="modal-kpi-sub text-muted" style="font-size:0.75rem; margin-top:4px; line-height:1.2;">Planted: ' + (f.planted_area_ha != null ? f.planted_area_ha.toFixed(2) : '0.00') + ' Ha<br>Fallow: ' + (f.fallow_area_ha != null ? f.fallow_area_ha.toFixed(2) : '0.00') + ' Ha<br>Other: ' + (f.other_area_ha != null ? f.other_area_ha.toFixed(2) : '0.00') + ' Ha</div></div>';
 
     // Cert History Timeline
     var timeline = document.getElementById('modal-cert-timeline');
