@@ -221,7 +221,9 @@ body {
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; gap: 16px;
   padding: 0 20px;
-  flex-shrink: 0; z-index: 50;
+  flex-shrink: 0; z-index: 100;
+  position: relative;
+  overflow: visible;
 }
 .topbar-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 #page-title { font-size: 1rem; font-weight: 600; color: var(--text); white-space: nowrap; }
@@ -237,7 +239,7 @@ body {
 
 .topbar-filters {
   display: flex; align-items: center; gap: 8px; flex: 1;
-  overflow-x: auto; padding-bottom: 2px;
+  overflow: visible;
 }
 
 /* Filter buttons */
@@ -264,11 +266,11 @@ body {
 .filter-btn.active .chevron { transform: rotate(180deg); }
 
 .filter-dropdown {
-  position: absolute; top: calc(100% + 8px); left: 0; z-index: 200;
-  background: var(--card); border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm); box-shadow: var(--shadow);
-  min-width: 180px; max-height: 280px; overflow-y: auto;
-  display: none; padding: 6px;
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 1000;
+  background-color: #172138 !important; opacity: 1 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-sm); box-shadow: 0 16px 48px rgba(0,0,0,0.85);
+  min-width: 200px; max-height: 320px; overflow-y: auto;
+  display: none; padding: 8px 6px;
 }
 .filter-dropdown.open { display: block; animation: fadeIn 0.15s ease; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
@@ -699,4 +701,19 @@ body {
   #sidebar, #topbar, .records-toolbar, .table-pagination { display: none !important; }
   #content-area { overflow: visible; padding: 0; }
   .chart-body { break-inside: avoid; }
+}
+
+/* Filter dropdown header actions */
+.filter-dropdown-actions span:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Modal timeline item polish */
+.cert-timeline-row {
+  transition: var(--transition);
+}
+.cert-timeline-row:hover {
+  border-color: rgba(0,212,168,0.3) !important;
+  background: var(--surface-2) !important;
 }

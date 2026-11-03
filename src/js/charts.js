@@ -357,7 +357,18 @@ var Charts = (function () {
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '60%',
-        plugins: {legend: {position: 'bottom', labels: {font: {size: 11}}}},
+        plugins: {
+          legend: {position: 'bottom', labels: {font: {size: 11}}},
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                var pct = total ? Math.round(ctx.parsed / total * 100) : 0;
+                return ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString() + ' (' + pct + '%)';
+              }
+            }
+          }
+        },
       },
     });
   }
@@ -430,9 +441,9 @@ var Charts = (function () {
       data: {
         labels: labels,
         datasets: [
-          {label: 'Sold',        data: trend.map(function(d){ return Math.round(d.sell_kg/1000); }),    backgroundColor: '#00D4A8', stack: 's'},
-          {label: 'Consumed',    data: trend.map(function(d){ return Math.round(d.consume_kg/1000); }), backgroundColor: '#60A5FA', stack: 's'},
-          {label: 'Seeds Kept',  data: trend.map(function(d){ return Math.round(d.seed_kg/1000); }),    backgroundColor: '#F59E0B', stack: 's'},
+          {label: 'Sold',        data: trend.map(function(d){ return Math.round((d.sell_kg || 0)/1000); }),    backgroundColor: '#00D4A8', stack: 's'},
+          {label: 'Consumed',    data: trend.map(function(d){ return Math.round((d.consume_kg || 0)/1000); }), backgroundColor: '#60A5FA', stack: 's'},
+          {label: 'Seeds Kept',  data: trend.map(function(d){ return Math.round((d.seed_kg || 0)/1000); }),    backgroundColor: '#F59E0B', stack: 's'},
         ],
       },
       options: {
@@ -690,10 +701,13 @@ var Charts = (function () {
       options: {
         responsive: true, maintainAspectRatio: false,
         scales: {x: xAxis, y: yAxis('Moisture (%)')},
-        plugins: {legend: {display: false}},
         plugins: {
           legend: {display: false},
-          annotation: {},
+          tooltip: {
+            callbacks: {
+              label: function (ctx) { return ' Avg Moisture: ' + (ctx.parsed.y != null ? ctx.parsed.y.toFixed(2) : '—') + '%'; }
+            }
+          }
         }
       },
     });
@@ -701,14 +715,21 @@ var Charts = (function () {
 
   // ── 22. Color Doughnut ────────────────────────────────────────
   function renderColorDist(id, qualityByYear) {
+    var colorMap = {
+      'Good': 'Good', 'Medium': 'Medium',
+      'ល្អ': 'Good (Clean)', '1.ល្អ': 'Grade 1 (Clean)',
+      '2.ស្រអាប់': 'Grade 2 (Slightly Dull)', 'ស្រអាប់': 'Slightly Dull',
+      'Unknown': 'Unspecified'
+    };
     var colorCounts = {};
     Object.values(qualityByYear).forEach(function (d) {
       Object.keys(d.colors || {}).forEach(function (c) {
-        colorCounts[c] = (colorCounts[c] || 0) + d.colors[c];
+        var cleanKey = colorMap[c] || c;
+        colorCounts[cleanKey] = (colorCounts[cleanKey] || 0) + d.colors[c];
       });
     });
     var labels = Object.keys(colorCounts).filter(function (k) { return colorCounts[k] > 0; });
-    var palette = ['#F8E3B3','#D97706','#F59E0B','#FDE68A','#92400E','#6B7280','#B45309'];
+    var palette = ['#00D4A8', '#38BDF8', '#F59E0B', '#FDE68A', '#A78BFA', '#6B7280', '#F87171'];
     return create(id, {
       type: 'doughnut',
       data: {

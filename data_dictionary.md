@@ -162,3 +162,34 @@ Stores quality grading evaluations.
   - `variety` (VARCHAR): Tested variety.
   - `status` (VARCHAR): Quality certification class (e.g., *Organic*).
   - `price_riel` (INT): Offered price in Riel/Kg.
+
+
+---
+
+## 3. Dashboard Component Data Requirements & Mapping
+
+This section defines the exact data fields and calculation rules required by each view of the dashboard application:
+
+| Dashboard Component | Target Metrics & Visuals | Source Tables & Key Columns | Calculation / Derivation Rule |
+| :--- | :--- | :--- | :--- |
+| **Overview Tab: KPIs** | Active Farmers, Production, Revenue, Compliance Rate | `fact_plot_inspection` (`farmer_uid`, `compliant`), `fact_threshing` (`actual_total_rice_production_kg`), `fact_purchase` (`total_payment_riel`) | Active Farmers: Distinct count of `farmer_uid` in year.<br>Revenue: Sum of `total_payment_riel` / 4,000 for USD.<br>Compliance: `(Count of compliant plots / Total plots) * 100`. |
+| **Overview: Participation Growth** | Stacked Bar: New, Existing, Rejoin | `fact_plot_inspection` (`farmer_status`, `farmer_uid`, `data_year`) | Sum of distinct farmers classified under `New`, `Existing`, `Rejoin` per season. |
+| **Overview: Production & Yield** | Dual Axis: Production (MT) & Yield (Kg/Ha) | `fact_threshing` (`actual_total_rice_production_kg`), `fact_plot_inspection` (`planted_area_ha`) | Production: `SUM(kg) / 1000`.<br>Yield: `SUM(actual_total_rice_production_kg) / SUM(planted_area_ha)`. |
+| **Overview: Purchase & Revenue** | Dual Axis: Volume (MT) & Net Revenue ($M) | `fact_purchase` (`quantity_kg`, `total_payment_riel`) | Volume: `SUM(quantity_kg) / 1000`.<br>Revenue: `SUM(total_payment_riel) / 4,000,000,000`. |
+| **Overview: Certification Status** | Doughnut: Organic, New Organic, Ibis I, Ibis II, WF | `fact_plot_inspection` (`status_harvest`, `data_year`) | Count of inspection records grouped by normalized certification status for the latest selected period. |
+| **Overview: Site Performance** | 5-Axis Radar: Farmers, Production, Land, Revenue, Compliance | Dimensions + All Fact Tables grouped by `dim_village.site_id` | Scaled 0-100% normalized across sites relative to the cohort maximum. |
+| **Farmers: Cohort Retention Matrix** | Heatmap Matrix: Join Cohort Year vs Active Year Retention % | `dim_farmer` (`farmer_uid`), `fact_plot_inspection` (`data_year`), `fact_threshing`, `fact_purchase` | Join Year: Minimum `data_year` across all activities.<br>Retention %: `(Active in Year Y / Cohort Size) * 100`. |
+| **Farmers: Top Villages** | Ranked Horizontal Bar (Top 15 Villages) | `dim_village`, `dim_farmer`, `fact_plot_inspection` | Count of unique active farmers grouped by `village_name` and filtered by `site_name`. |
+| **Farmers: Gender Distribution** | Doughnut: Female vs Male | `dim_farmer` (`gender`), `fact_plot_inspection` | Active farmers filtered by `gender` for active site/year selection. |
+| **Production: Land vs Production** | Dual Axis: Production (MT) vs Farmland Area (Ha) | `fact_threshing` (`actual_total_rice_production_kg`), `fact_plot_inspection` (`planted_area_ha`, `fallow_area_ha`, `other_area_ha`) | Farmland Area: `SUM(planted_area_ha + fallow_area_ha + other_area_ha)`. |
+| **Production: Yield by Site** | Multi-Line Chart (Kg/Ha per Site) | `fact_threshing`, `fact_plot_inspection`, `dim_village.site_id` | `SUM(production_kg) / SUM(planted_area_ha)` calculated independently per site and year. |
+| **Production: Paddy Allocation** | Stacked Bar: Sold, Consumed, Seeds Kept | `fact_threshing` (`paddy_prepare_for_sell_kg`, `paddy_keep_for_consumption_kg`, `paddy_keep_for_seeds_kg`) | Volume in Metric Tons (`Kg / 1000`). |
+| **Production: Threshing Method** | Doughnut: Machine vs Hand | `fact_threshing` (`threshing_method`) | Count of records normalized into `Machine`, `Hand`, or `Unknown`. |
+| **Market: Average Price Trend** | Trend Line: Avg Price (KHR/Kg) | `fact_purchase` (`total_amount_riel`, `quantity_kg`) | `SUM(total_amount_riel) / SUM(quantity_kg)` gross market price. |
+| **Market: Variety Breakdown** | Stacked Bar: Rice Variety Purchase Volume | `fact_purchase` (`variety`, `quantity_kg`) | Volume in MT for top varieties across selected sites. |
+| **Quality: Grade Distribution** | Stacked 100% Bar: A1, A, A2, B1, B2, B | `fact_quality_spec` (`grade`, `data_year`) | Count of inspected sacks/lots per grade category. |
+| **Quality: Grain Quality Trends** | Multi-Line: Good Grain %, Broken Grain %, Impurity % | `fact_quality_spec` (`good_grain_pct`, `broken_grain_pct`, `rice_impurity`) | Yearly arithmetic mean of evaluations. |
+| **Quality: Moisture Content** | Trend Line: Average Moisture % | `fact_quality_spec` (`moisture`) | Yearly arithmetic mean of grain moisture (ideal target: < 14%). |
+| **Geography: Leaflet Map & Sidebar** | Interactive coordinates, bubble sizes, site stats, villages list | `dim_site` (`lat`, `lng`), all operational tables | Bubble radius scaled by active farmer volume; click updates sidebar breakdown of planted/fallow/other area and village directory. |
+| **Land: Area Trend & Situation** | Stacked Bar: Planted, Fallow, Other; Doughnuts: Situation & Ownership | `fact_plot_inspection` (`planted_area_ha`, `fallow_area_ha`, `other_area_ha`, `land_situation`, `land_ownership`, `irrigation_system`) | Aggregated farmland distribution and tenure classifications. |
+| **Farmer Records Table & Modal** | Searchable directory, sorting, pagination, CSV export, profile modal | `dim_farmer`, `dim_village`, `dim_site`, all operational logs | Individual farmer dossier showing cumulative metrics, varieties, and year-by-year history cards. |

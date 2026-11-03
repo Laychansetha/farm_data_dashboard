@@ -14,17 +14,16 @@ var Views = (function () {
       { key: 'farmers', label: 'Active Farmers', fmt: Data.numFmt, cls: 'green' },
       { key: 'prod_kg', label: 'Paddy Production', fmt: Data.kgFmt, cls: 'teal' },
       { key: 'purch_riel', label: 'Program Revenue', fmt: Data.rielFmt, cls: 'gold' },
-      { key: 'compliance', label: 'Compliance Rate', fmt: Data.pctFmt, cls: 'blue' }
+      { key: 'compliance', label: 'Compliance Rate', fmt: Data.pctFmt, cls: 'blue', isPoints: true }
     ];
 
     list.forEach(function (item) {
-      var k = kpis[item.key];
-      if (!k) return;
+      var k = kpis[item.key] || { val: 0, chg: null };
       var card = document.createElement('div');
       card.className = 'kpi-card ' + item.cls;
 
       var chgHtml = '';
-      if (k.chg !== null) {
+      if (k.chg !== null && k.chg !== undefined) {
         var sign = k.chg >= 0 ? '+' : '';
         var suffix = item.isPoints ? ' pp' : '%';
         var isUp = k.chg >= 0;
@@ -65,17 +64,21 @@ var Views = (function () {
     var ip = document.getElementById('insights-overview');
     if (ip) {
       ip.innerHTML = '';
-      insights.forEach(function (ins) {
-        var item = document.createElement('div');
-        item.className = 'insight-item';
-        item.innerHTML =
-          '<div class="insight-icon">' + ins.icon + '</div>' +
-          '<div class="insight-text">' +
-          '<div class="insight-title">' + ins.title + '</div>' +
-          '<div class="insight-body">' + ins.body + '</div>' +
-          '</div>';
-        ip.appendChild(item);
-      });
+      if (!insights.length) {
+        ip.innerHTML = '<div class="insight-item"><div class="insight-text"><div class="insight-title">No Insights Available</div><div class="insight-body">Select at least two years and one site to view historical trend comparisons.</div></div></div>';
+      } else {
+        insights.forEach(function (ins) {
+          var item = document.createElement('div');
+          item.className = 'insight-item';
+          item.innerHTML =
+            '<div class="insight-icon">' + ins.icon + '</div>' +
+            '<div class="insight-text">' +
+            '<div class="insight-title">' + ins.title + '</div>' +
+            '<div class="insight-body">' + ins.body + '</div>' +
+            '</div>';
+          ip.appendChild(item);
+        });
+      }
     }
   }
 
@@ -92,24 +95,29 @@ var Views = (function () {
       var targetEl = document.getElementById('kpi-farmers');
       targetEl.innerHTML = '';
 
+      var totalNew = trend.reduce(function (a, b) { return a + (b.new || 0); }, 0);
+      var overallKpis = Data.getOverallKPIs(state);
+
       var items = [
-        { val: kpis.farmers ? kpis.farmers.val : 0, chg: kpis.farmers ? kpis.farmers.chg : null, label: 'Active Farmers', fmt: Data.numFmt, cls: 'green' },
-        { val: trend.reduce(function (a, b) { return a + (b.new || 0); }, 0), label: 'Total New Registrations', fmt: Data.numFmt, cls: 'teal' },
-        { val: Data.getOverallKPIs(state).total_farmers, label: 'Total Farmer Registry', fmt: Data.numFmt, cls: 'blue' }
+        { val: kpis.farmers ? kpis.farmers.val : 0, chg: kpis.farmers ? kpis.farmers.chg : null, label: 'Active Farmers', fmt: Data.numFmt, cls: 'green', isYoY: true },
+        { val: totalNew, label: 'Total New Registrations', fmt: Data.numFmt, cls: 'teal', isYoY: false },
+        { val: overallKpis.total_farmers, label: 'Total Farmer Registry', fmt: Data.numFmt, cls: 'blue', isYoY: false }
       ];
 
       items.forEach(function (it) {
         var card = document.createElement('div');
         card.className = 'kpi-card ' + it.cls;
         var chg = '';
-        if (it.chg !== undefined && it.chg !== null) {
+        var subText = 'Across active years';
+        if (it.isYoY && it.chg !== null && it.chg !== undefined) {
           var isUp = it.chg >= 0;
           chg = '<span class="kpi-change ' + (isUp ? 'up' : 'down') + '">' + (isUp ? '▲' : '▼') + ' ' + (isUp ? '+' : '') + it.chg + '%</span>';
+          subText = 'vs prior period';
         }
         card.innerHTML =
           '<div class="kpi-label">' + it.label + '</div>' +
           '<div class="kpi-value">' + it.fmt(it.val) + '</div>' +
-          '<div class="kpi-footer">' + chg + '<span class="kpi-sub">Across active years</span></div>';
+          '<div class="kpi-footer">' + chg + '<span class="kpi-sub">' + subText + '</span></div>';
         targetEl.appendChild(card);
       });
     }
@@ -120,7 +128,7 @@ var Views = (function () {
     Charts.renderTopVillagesFarmers('chart-top-villages-farmers', vills);
     Charts.renderGender('chart-gender', records, state);
 
-    // Cohort Matrix Table
+    // Cohort Matrix Table (site reactive)
     renderCohortMatrix(state);
   }
 
@@ -129,9 +137,14 @@ var Views = (function () {
     if (!wrapper) return;
     wrapper.innerHTML = '';
 
-    var cohort = Data.getCohortData();
+    var cohort = Data.getCohortData(state);
     var joinYears = Object.keys(cohort).sort();
     var activeYears = Array.from(state.years).sort();
+
+    if (!joinYears.length || !activeYears.length) {
+      wrapper.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center; color:var(--text-2);">No cohort retention data available for current filter selection.</div>';
+      return;
+    }
 
     var table = document.createElement('table');
     table.className = 'cohort-table';
@@ -145,7 +158,7 @@ var Views = (function () {
 
     var tbody = document.createElement('tbody');
     joinYears.forEach(function (jy) {
-      var sizes = cohort[jy];
+      var sizes = cohort[jy] || {};
       var size = sizes[jy] || 0;
       if (!size) return;
 
@@ -157,11 +170,10 @@ var Views = (function () {
           tr.innerHTML += '<td class="text-muted">—</td>';
         } else {
           var count = sizes[ay] || 0;
-          var pct = size ? Math.round(count / size * 100) : 0;
-          // color mapping
-          var heat = 'rgba(0, 212, 168, ' + (pct / 100 * 0.85 + 0.15) + ')';
-          var textCol = pct > 45 ? '#07091A' : '#E8EDF5';
-          tr.innerHTML += '<td><span class="retention-cell" style="background:' + heat + ';color:' + textCol + '">' + count.toLocaleString() + ' (' + pct + '%)</span></td>';
+          var pctVal = size ? Math.round(count / size * 100) : 0;
+          var heat = 'rgba(0, 212, 168, ' + (pctVal / 100 * 0.85 + 0.15) + ')';
+          var textCol = pctVal > 45 ? '#07091A' : '#E8EDF5';
+          tr.innerHTML += '<td><span class="retention-cell" style="background:' + heat + ';color:' + textCol + '">' + count.toLocaleString() + ' (' + pctVal + '%)</span></td>';
         }
       });
       tbody.appendChild(tr);
@@ -192,7 +204,7 @@ var Views = (function () {
         var card = document.createElement('div');
         card.className = 'kpi-card ' + it.cls;
         var chg = '';
-        if (it.chg !== null) {
+        if (it.chg !== null && it.chg !== undefined) {
           var isUp = it.chg >= 0;
           chg = '<span class="kpi-change ' + (isUp ? 'up' : 'down') + '">' + (isUp ? '▲' : '▼') + ' ' + (isUp ? '+' : '') + it.chg + '%</span>';
         }
@@ -233,7 +245,7 @@ var Views = (function () {
         var card = document.createElement('div');
         card.className = 'kpi-card ' + it.cls;
         var chg = '';
-        if (it.chg !== null) {
+        if (it.chg !== null && it.chg !== undefined) {
           var isUp = it.chg >= 0;
           chg = '<span class="kpi-change ' + (isUp ? 'up' : 'down') + '">' + (isUp ? '▲' : '▼') + ' ' + (isUp ? '+' : '') + it.chg + '%</span>';
         }
@@ -255,13 +267,11 @@ var Views = (function () {
   // ── Quality Tab ──────────────────────────────────────────────
   function updateQuality(state) {
     var qData = Data.getQualityByYear(state);
-    var trend = Data.getAggYearly(state);
 
     if (document.getElementById('kpi-quality')) {
       var targetEl = document.getElementById('kpi-quality');
       targetEl.innerHTML = '';
 
-      // Compute averages across selected years
       var moists = [], good = [], broken = [], records = 0;
       Object.values(qData).forEach(function (d) {
         if (d.avg_moisture) moists.push(d.avg_moisture);
@@ -271,8 +281,7 @@ var Views = (function () {
       });
 
       var avgMoist = moists.length ? moists.reduce(function (a, b) { return a + b; }, 0) / moists.length : 0;
-      var avgGood = good.length ? good.reduce(function (a, b) { return a + b; }, 0) / good.length : 0;
-      var avgBroken = broken.length ? broken.reduce(function (a, b) { return a + b; }, 0) / broken.length : 0;
+      var avgGood  = good.length ? good.reduce(function (a, b) { return a + b; }, 0) / good.length : 0;
 
       var items = [
         { val: avgGood, label: 'Average Good Grain %', fmt: function (n) { return Data.numFmt(n, 1) + '%'; }, cls: 'green' },
@@ -286,7 +295,7 @@ var Views = (function () {
         card.innerHTML =
           '<div class="kpi-label">' + it.label + '</div>' +
           '<div class="kpi-value">' + it.fmt(it.val) + '</div>' +
-          '<div class="kpi-footer"><span class="kpi-change flat">Overall</span><span class="kpi-sub">across active years</span></div>';
+          '<div class="kpi-footer"><span class="kpi-change flat">Overall</span><span class="kpi-sub">across active selection</span></div>';
         targetEl.appendChild(card);
       });
     }
@@ -320,7 +329,7 @@ var Views = (function () {
         var card = document.createElement('div');
         card.className = 'kpi-card ' + it.cls;
         var chg = '';
-        if (it.chg !== null) {
+        if (it.chg !== null && it.chg !== undefined) {
           var isUp = it.chg >= 0;
           chg = '<span class="kpi-change ' + (isUp ? 'up' : 'down') + '">' + (isUp ? '▲' : '▼') + ' ' + (isUp ? '+' : '') + it.chg + '%</span>';
         }
@@ -344,12 +353,12 @@ var Views = (function () {
   function update(tabId, state) {
     if (!Data.ready()) return;
     switch (tabId) {
-      case 'overview': updateOverview(state); break;
-      case 'farmers': updateFarmers(state); break;
+      case 'overview':   updateOverview(state); break;
+      case 'farmers':    updateFarmers(state); break;
       case 'production': updateProduction(state); break;
-      case 'market': updateMarket(state); break;
-      case 'quality': updateQuality(state); break;
-      case 'land': updateLand(state); break;
+      case 'market':     updateMarket(state); break;
+      case 'quality':    updateQuality(state); break;
+      case 'land':       updateLand(state); break;
     }
   }
 
